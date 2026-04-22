@@ -1,13 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const newsletterController = require("../controllers/newsletterController");
-const { verifyToken, verifyRole } = require("../middleware/authMiddleware");
+const { verifyToken, verifyPermission } = require("../middleware/authMiddleware");
 const newsletterUpload = require("../middleware/newsletterUploadMiddleware");
 
 router.post(
   "/",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("newsletters", "create"),
   newsletterUpload.fields([
     { name: "photo", maxCount: 1 },
     { name: "attachment", maxCount: 1 },
@@ -15,13 +15,13 @@ router.post(
   newsletterController.createNewsletter,
 );
 
-router.get("/", verifyToken, verifyRole(["admin"]), newsletterController.getAllNewsletters);
-router.get("/:id", verifyToken, verifyRole(["admin"]), newsletterController.getNewsletterById);
+router.get("/", newsletterController.getAllNewsletters);
+router.get("/:id", newsletterController.getNewsletterById);
 
 router.put(
   "/:id",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("newsletters", "edit"),
   newsletterUpload.fields([
     { name: "photo", maxCount: 1 },
     { name: "attachment", maxCount: 1 },
@@ -29,6 +29,6 @@ router.put(
   newsletterController.updateNewsletter,
 );
 
-router.delete("/:id", verifyToken, verifyRole(["admin"]), newsletterController.deleteNewsletter);
+router.delete("/:id", verifyToken, verifyPermission("newsletters", "delete"), newsletterController.deleteNewsletter);
 
 module.exports = router;

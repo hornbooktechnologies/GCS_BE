@@ -128,7 +128,7 @@ const countUsers = async (role) => {
 
 const getUsersWithBirthdayToday = async () => {
   const [rows] = await pool.query(
-    "SELECT u.id, u.first_name, u.last_name, u.email, u.role, u.dob, e.user_image FROM gcs_users u LEFT JOIN gcs_employees e ON u.id = e.user_id WHERE MONTH(u.dob) = MONTH(CURDATE()) AND DAY(u.dob) = DAY(CURDATE()) AND u.status = 'active'",
+    "SELECT u.id, u.first_name, u.last_name, u.email, u.role, u.dob, NULL AS user_image FROM gcs_users u WHERE MONTH(u.dob) = MONTH(CURDATE()) AND DAY(u.dob) = DAY(CURDATE()) AND u.status = 'active'",
   );
   return rows;
 };

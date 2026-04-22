@@ -1,47 +1,43 @@
 const express = require("express");
 const router = express.Router();
 const patientTestimonialController = require("../controllers/patientTestimonialController");
-const { verifyToken, verifyRole } = require("../middleware/authMiddleware");
+const { verifyToken, verifyPermission } = require("../middleware/authMiddleware");
 
 router.put(
   "/reorder",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("patient-testimonials", "edit"),
   patientTestimonialController.reorderPatientTestimonials,
 );
 
 router.post(
   "/",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("patient-testimonials", "create"),
   patientTestimonialController.createPatientTestimonial,
 );
 
 router.get(
   "/",
-  verifyToken,
-  verifyRole(["admin"]),
   patientTestimonialController.getAllPatientTestimonials,
 );
 
 router.get(
   "/:id",
-  verifyToken,
-  verifyRole(["admin"]),
   patientTestimonialController.getPatientTestimonialById,
 );
 
 router.put(
   "/:id",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("patient-testimonials", "edit"),
   patientTestimonialController.updatePatientTestimonial,
 );
 
 router.delete(
   "/:id",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("patient-testimonials", "delete"),
   patientTestimonialController.deletePatientTestimonial,
 );
 

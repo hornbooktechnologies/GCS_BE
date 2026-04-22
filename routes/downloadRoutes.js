@@ -1,13 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const downloadController = require("../controllers/downloadController");
-const { verifyToken, verifyRole } = require("../middleware/authMiddleware");
+const { verifyToken, verifyPermission } = require("../middleware/authMiddleware");
 const downloadUpload = require("../middleware/downloadUploadMiddleware");
 
 router.post(
   "/",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("downloads", "create"),
   downloadUpload.fields([
     { name: "image", maxCount: 1 },
     { name: "pdf", maxCount: 1 },
@@ -15,13 +15,13 @@ router.post(
   downloadController.createDownload,
 );
 
-router.get("/", verifyToken, verifyRole(["admin"]), downloadController.getAllDownloads);
-router.get("/:id", verifyToken, verifyRole(["admin"]), downloadController.getDownloadById);
+router.get("/", downloadController.getAllDownloads);
+router.get("/:id", downloadController.getDownloadById);
 
 router.put(
   "/:id",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("downloads", "edit"),
   downloadUpload.fields([
     { name: "image", maxCount: 1 },
     { name: "pdf", maxCount: 1 },
@@ -29,6 +29,6 @@ router.put(
   downloadController.updateDownload,
 );
 
-router.delete("/:id", verifyToken, verifyRole(["admin"]), downloadController.deleteDownload);
+router.delete("/:id", verifyToken, verifyPermission("downloads", "delete"), downloadController.deleteDownload);
 
 module.exports = router;

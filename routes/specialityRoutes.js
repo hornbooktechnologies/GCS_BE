@@ -1,15 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const specialityController = require("../controllers/specialityController");
-const { verifyToken, verifyRole } = require("../middleware/authMiddleware");
+const { verifyToken, verifyPermission } = require("../middleware/authMiddleware");
 const specialityUpload = require("../middleware/specialityUploadMiddleware");
 
-router.get("/", verifyToken, verifyRole(["admin"]), specialityController.getAllSpecialities);
-router.get("/:id", verifyToken, verifyRole(["admin"]), specialityController.getSpecialityById);
+router.get("/", specialityController.getAllSpecialities);
+router.get("/:id", specialityController.getSpecialityById);
 router.post(
   "/",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("specialities", "create"),
   specialityUpload.fields([
     { name: "top_banner", maxCount: 1 },
     { name: "main_banners", maxCount: 10 },
@@ -20,7 +20,7 @@ router.post(
 router.put(
   "/:id",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("specialities", "edit"),
   specialityUpload.fields([
     { name: "top_banner", maxCount: 1 },
     { name: "main_banners", maxCount: 10 },
@@ -28,6 +28,6 @@ router.put(
   ]),
   specialityController.updateSpeciality,
 );
-router.delete("/:id", verifyToken, verifyRole(["admin"]), specialityController.deleteSpeciality);
+router.delete("/:id", verifyToken, verifyPermission("specialities", "delete"), specialityController.deleteSpeciality);
 
 module.exports = router;

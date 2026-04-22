@@ -1,33 +1,33 @@
 const express = require("express");
 const router = express.Router();
 const activityLogController = require("../controllers/activityLogController");
-const { verifyToken, verifyRole } = require("../middleware/authMiddleware");
+const { verifyToken, verifyPermission } = require("../middleware/authMiddleware");
 
 router.get(
   "/",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("activity-logs", "list"),
   activityLogController.getActivityLogs,
 );
 
 router.delete(
   "/",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("activity-logs", "delete"),
   activityLogController.deleteLogs,
 );
 
 router.delete(
   "/:id",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("activity-logs", "delete"),
   activityLogController.deleteLogs,
 );
 
 router.post(
   "/delete-multiple",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("activity-logs", "delete"),
   activityLogController.deleteLogs,
 );
 

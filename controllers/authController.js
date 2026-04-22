@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const userDao = require("../dao/userDao");
+const roleDao = require("../dao/roleDao");
 const {
   generateAccessToken,
   generateRefreshToken,
@@ -33,6 +34,7 @@ const login = async (req, res) => {
       });
     }
 
+    const permissions = await roleDao.getPermissionsByRoleSlug(user.role);
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
@@ -69,6 +71,7 @@ const login = async (req, res) => {
         last_name: user.last_name,
         email: user.email,
         role: user.role,
+        permissions,
         dob: user.dob,
       },
       tokens: { accessToken, refreshToken },

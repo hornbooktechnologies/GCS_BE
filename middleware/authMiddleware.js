@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const roleDao = require("../dao/roleDao");
 const { error } = require("../utils/responseHandler");
 
 const verifyToken = (req, res, next) => {
@@ -46,4 +47,31 @@ const verifyRole = (roles) => {
   };
 };
 
-module.exports = { verifyToken, verifyRole };
+const verifyPermission = (moduleKey, action) => {
+  return async (req, res, next) => {
+    try {
+      if (!req.user) {
+        return error(res, 401, "Authentication required", {
+          code: "AUTH_REQUIRED",
+        });
+      }
+
+      const allowed = await roleDao.userHasPermission(req.user.role, moduleKey, action);
+      if (!allowed) {
+        return error(res, 403, "Access denied: Missing permission", {
+          code: "PERMISSION_DENIED",
+          module: moduleKey,
+          action,
+        });
+      }
+
+      next();
+    } catch (err) {
+      return error(res, 500, "Permission check failed", {
+        details: err.message,
+      });
+    }
+  };
+};
+
+module.exports = { verifyToken, verifyRole, verifyPermission };

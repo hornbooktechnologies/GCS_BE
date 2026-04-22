@@ -1,20 +1,20 @@
 const express = require("express");
 const router = express.Router();
 const blogController = require("../controllers/blogController");
-const { verifyToken, verifyRole } = require("../middleware/authMiddleware");
+const { verifyToken, verifyPermission } = require("../middleware/authMiddleware");
 const blogUpload = require("../middleware/blogUploadMiddleware");
 
 router.put(
   "/reorder",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("blogs", "edit"),
   blogController.reorderBlogs,
 );
 
 router.post(
   "/",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("blogs", "create"),
   blogUpload.fields([
     { name: "thumbnail_image", maxCount: 1 },
     { name: "detail_image", maxCount: 1 },
@@ -22,19 +22,17 @@ router.post(
   blogController.createBlog,
 );
 
-router.get("/", verifyToken, verifyRole(["admin"]), blogController.getAllBlogs);
+router.get("/", blogController.getAllBlogs);
 
 router.get(
   "/:id",
-  verifyToken,
-  verifyRole(["admin"]),
   blogController.getBlogById,
 );
 
 router.put(
   "/:id",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("blogs", "edit"),
   blogUpload.fields([
     { name: "thumbnail_image", maxCount: 1 },
     { name: "detail_image", maxCount: 1 },
@@ -45,7 +43,7 @@ router.put(
 router.delete(
   "/:id",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("blogs", "delete"),
   blogController.deleteBlog,
 );
 

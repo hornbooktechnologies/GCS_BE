@@ -4,6 +4,7 @@ const cors = require("cors");
 const os = require("os");
 
 const authRoutes = require("./routes/authRoutes");
+const roleRoutes = require("./routes/roleRoutes");
 const userRoutes = require("./routes/userRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const activityLogRoutes = require("./routes/activityLogRoutes");
@@ -33,6 +34,7 @@ const journalRoutes = require("./routes/journalRoutes");
 const nursingPhotoGalleryRoutes = require("./routes/nursingPhotoGalleryRoutes");
 const specialityRoutes = require("./routes/specialityRoutes");
 const doctorRoutes = require("./routes/doctorRoutes");
+const sympotmRoutes = require("./routes/sympotmRoutes");
 
 const activityLogger = require("./middleware/activityLogger");
 
@@ -45,6 +47,7 @@ app.use(express.json());
 app.use(activityLogger);
 
 app.use("/api/auth", authRoutes);
+app.use("/api/roles", roleRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/activity-logs", activityLogRoutes);
@@ -74,6 +77,8 @@ app.use("/api/journals", journalRoutes);
 app.use("/api/nursing-photo-gallery", nursingPhotoGalleryRoutes);
 app.use("/api/specialities", specialityRoutes);
 app.use("/api/doctors", doctorRoutes);
+app.use("/api/sympotms", sympotmRoutes);
+app.use("/api/symptoms", sympotmRoutes);
 
 app.get("/", (req, res) => {
   res.send("GCS Hospital API is running");

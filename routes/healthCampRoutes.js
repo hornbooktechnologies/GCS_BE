@@ -1,12 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const healthCampController = require("../controllers/healthCampController");
-const { verifyToken, verifyRole } = require("../middleware/authMiddleware");
+const { verifyToken, verifyPermission } = require("../middleware/authMiddleware");
 
-router.get("/", verifyToken, verifyRole(["admin"]), healthCampController.getAllHealthCamps);
-router.get("/:id", verifyToken, verifyRole(["admin"]), healthCampController.getHealthCampById);
-router.post("/", verifyToken, verifyRole(["admin"]), healthCampController.createHealthCamp);
-router.put("/:id", verifyToken, verifyRole(["admin"]), healthCampController.updateHealthCamp);
-router.delete("/:id", verifyToken, verifyRole(["admin"]), healthCampController.deleteHealthCamp);
+router.get("/", healthCampController.getAllHealthCamps);
+router.get("/:id", healthCampController.getHealthCampById);
+router.post("/", verifyToken, verifyPermission("health-camps", "create"), healthCampController.createHealthCamp);
+router.put("/:id", verifyToken, verifyPermission("health-camps", "edit"), healthCampController.updateHealthCamp);
+router.delete("/:id", verifyToken, verifyPermission("health-camps", "delete"), healthCampController.deleteHealthCamp);
 
 module.exports = router;

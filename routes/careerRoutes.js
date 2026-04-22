@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const careerController = require("../controllers/careerController");
-const { verifyToken, verifyRole } = require("../middleware/authMiddleware");
+const { verifyToken, verifyPermission } = require("../middleware/authMiddleware");
 const careerUpload = require("../middleware/careerUploadMiddleware");
 
 router.get("/current-openings", careerController.getAllCurrentOpenings);
@@ -9,19 +9,19 @@ router.get("/current-openings/:id", careerController.getCurrentOpeningById);
 router.post(
   "/current-openings",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("career", "create"),
   careerController.createCurrentOpening,
 );
 router.put(
   "/current-openings/:id",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("career", "edit"),
   careerController.updateCurrentOpening,
 );
 router.delete(
   "/current-openings/:id",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("career", "delete"),
   careerController.deleteCurrentOpening,
 );
 
@@ -33,7 +33,7 @@ router.post(
 router.get(
   "/applications",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("career", "list"),
   careerController.getAllCareerApplications,
 );
 
@@ -42,7 +42,7 @@ router.get("/teaching-positions/:id", careerController.getTeachingPositionById);
 router.post(
   "/teaching-positions",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("career", "create"),
   careerUpload.fields([
     { name: "image", maxCount: 1 },
     { name: "pdf", maxCount: 1 },
@@ -52,7 +52,7 @@ router.post(
 router.put(
   "/teaching-positions/:id",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("career", "edit"),
   careerUpload.fields([
     { name: "image", maxCount: 1 },
     { name: "pdf", maxCount: 1 },
@@ -62,7 +62,7 @@ router.put(
 router.delete(
   "/teaching-positions/:id",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("career", "delete"),
   careerController.deleteTeachingPosition,
 );
 
@@ -71,7 +71,7 @@ router.get("/internship-positions/:id", careerController.getInternshipPositionBy
 router.post(
   "/internship-positions",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("career", "create"),
   careerUpload.fields([
     { name: "image", maxCount: 1 },
     { name: "pdf", maxCount: 1 },
@@ -81,7 +81,7 @@ router.post(
 router.put(
   "/internship-positions/:id",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("career", "edit"),
   careerUpload.fields([
     { name: "image", maxCount: 1 },
     { name: "pdf", maxCount: 1 },
@@ -91,7 +91,7 @@ router.put(
 router.delete(
   "/internship-positions/:id",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("career", "delete"),
   careerController.deleteInternshipPosition,
 );
 

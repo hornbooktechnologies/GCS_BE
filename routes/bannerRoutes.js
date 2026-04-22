@@ -1,14 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const bannerController = require("../controllers/bannerController");
-const { verifyToken, verifyRole } = require("../middleware/authMiddleware");
+const { verifyToken, verifyPermission } = require("../middleware/authMiddleware");
 const bannerUpload = require("../middleware/bannerUploadMiddleware");
 
 // Reorder banners (must be before /:id routes to avoid conflict)
 router.put(
   "/reorder",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("banners", "edit"),
   bannerController.reorderBanners
 );
 
@@ -16,32 +16,22 @@ router.put(
 router.post(
   "/",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("banners", "create"),
   bannerUpload.single("image"),
   bannerController.createBanner
 );
 
 // Get all banners
-router.get(
-  "/",
-  verifyToken,
-  verifyRole(["admin"]),
-  bannerController.getAllBanners
-);
+router.get("/", bannerController.getAllBanners);
 
 // Get banner by ID
-router.get(
-  "/:id",
-  verifyToken,
-  verifyRole(["admin"]),
-  bannerController.getBannerById
-);
+router.get("/:id", bannerController.getBannerById);
 
 // Update a banner (with optional image upload)
 router.put(
   "/:id",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("banners", "edit"),
   bannerUpload.single("image"),
   bannerController.updateBanner
 );
@@ -50,7 +40,7 @@ router.put(
 router.delete(
   "/:id",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("banners", "delete"),
   bannerController.deleteBanner
 );
 

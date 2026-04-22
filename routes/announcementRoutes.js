@@ -1,20 +1,20 @@
 const express = require("express");
 const router = express.Router();
 const announcementController = require("../controllers/announcementController");
-const { verifyToken, verifyRole } = require("../middleware/authMiddleware");
+const { verifyToken, verifyPermission } = require("../middleware/authMiddleware");
 const announcementUpload = require("../middleware/announcementUploadMiddleware");
 
 router.put(
   "/reorder",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("announcements", "edit"),
   announcementController.reorderAnnouncements,
 );
 
 router.post(
   "/",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("announcements", "create"),
   announcementUpload.fields([
     { name: "pdf", maxCount: 1 },
     { name: "image", maxCount: 1 },
@@ -24,22 +24,18 @@ router.post(
 
 router.get(
   "/",
-  verifyToken,
-  verifyRole(["admin"]),
   announcementController.getAllAnnouncements,
 );
 
 router.get(
   "/:id",
-  verifyToken,
-  verifyRole(["admin"]),
   announcementController.getAnnouncementById,
 );
 
 router.put(
   "/:id",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("announcements", "edit"),
   announcementUpload.fields([
     { name: "pdf", maxCount: 1 },
     { name: "image", maxCount: 1 },
@@ -50,7 +46,7 @@ router.put(
 router.delete(
   "/:id",
   verifyToken,
-  verifyRole(["admin"]),
+  verifyPermission("announcements", "delete"),
   announcementController.deleteAnnouncement,
 );
 

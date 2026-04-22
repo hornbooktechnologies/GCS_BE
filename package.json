@@ -16,13 +16,16 @@
     "add-events-tables": "node config/addEventsTables.js",
     "add-newsletters-table": "node config/addNewslettersTable.js",
     "add-career-tables": "node config/addCareerTables.js",
+    "add-employees-table": "node config/addEmployeesTable.js",
     "add-downloads-table": "node config/addDownloadsTable.js",
     "add-team-tables": "node config/addTeamTables.js",
     "add-awards-table": "node config/addAwardsTable.js",
     "add-news-table": "node config/addNewsTable.js",
     "add-health-camps-table": "node config/addHealthCampsTable.js",
     "add-specialities-tables": "node config/addSpecialitiesTables.js",
-    "add-doctors-tables": "node config/addDoctorsTables.js"
+    "add-doctors-tables": "node config/addDoctorsTables.js",
+    "add-sympotms-table": "node config/addSympotmsTable.js",
+    "add-roles-permissions-tables": "node config/addRolesPermissionsTables.js"
   },
   "keywords": [],
   "author": "",

@@ -1,12 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const teamCategoryController = require("../controllers/teamCategoryController");
-const { verifyToken, verifyRole } = require("../middleware/authMiddleware");
+const { verifyToken, verifyPermission } = require("../middleware/authMiddleware");
 
-router.get("/", verifyToken, verifyRole(["admin"]), teamCategoryController.getAllTeamCategories);
-router.get("/:id", verifyToken, verifyRole(["admin"]), teamCategoryController.getTeamCategoryById);
-router.post("/", verifyToken, verifyRole(["admin"]), teamCategoryController.createTeamCategory);
-router.put("/:id", verifyToken, verifyRole(["admin"]), teamCategoryController.updateTeamCategory);
-router.delete("/:id", verifyToken, verifyRole(["admin"]), teamCategoryController.deleteTeamCategory);
+router.get("/", teamCategoryController.getAllTeamCategories);
+router.get("/:id", teamCategoryController.getTeamCategoryById);
+router.post("/", verifyToken, verifyPermission("team-categories", "create"), teamCategoryController.createTeamCategory);
+router.put("/:id", verifyToken, verifyPermission("team-categories", "edit"), teamCategoryController.updateTeamCategory);
+router.delete("/:id", verifyToken, verifyPermission("team-categories", "delete"), teamCategoryController.deleteTeamCategory);
 
 module.exports = router;

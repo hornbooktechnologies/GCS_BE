@@ -1,13 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const campusLifeController = require("../controllers/campusLifeController");
-const { verifyToken, verifyRole } = require("../middleware/authMiddleware");
+const { verifyToken, verifyPermission } = require("../middleware/authMiddleware");
 const campusLifeUpload = require("../middleware/campusLifeUploadMiddleware");
 
-router.get("/", verifyToken, verifyRole(["admin"]), campusLifeController.getAllCampusLife);
-router.get("/:id", verifyToken, verifyRole(["admin"]), campusLifeController.getCampusLifeById);
-router.post("/", verifyToken, verifyRole(["admin"]), campusLifeUpload.single("image"), campusLifeController.createCampusLife);
-router.put("/:id", verifyToken, verifyRole(["admin"]), campusLifeUpload.single("image"), campusLifeController.updateCampusLife);
-router.delete("/:id", verifyToken, verifyRole(["admin"]), campusLifeController.deleteCampusLife);
+router.get("/", campusLifeController.getAllCampusLife);
+router.get("/:id", campusLifeController.getCampusLifeById);
+router.post("/", verifyToken, verifyPermission("campus-life", "create"), campusLifeUpload.single("image"), campusLifeController.createCampusLife);
+router.put("/:id", verifyToken, verifyPermission("campus-life", "edit"), campusLifeUpload.single("image"), campusLifeController.updateCampusLife);
+router.delete("/:id", verifyToken, verifyPermission("campus-life", "delete"), campusLifeController.deleteCampusLife);
 
 module.exports = router;
