@@ -22,9 +22,32 @@ const deleteS3Object = async (key) => {
   );
 };
 
+const normalizeOptionalText = (value) => {
+  if (value === undefined) return undefined;
+  const trimmed = String(value).trim();
+  return trimmed === "" ? null : trimmed;
+};
+
 const createTeamMember = async (req, res) => {
   try {
-    const { name, subtitle, description, category_id } = req.body;
+    const {
+      name,
+      subtitle,
+      description,
+      category_id,
+      short_description,
+      role_tag,
+      featured_title,
+      featured_description,
+      visionary_leadership_title,
+      visionary_leadership_description,
+      proven_expertise_title,
+      proven_expertise_description,
+      verification_label,
+      verification_value,
+      affiliation_label,
+      affiliation_value,
+    } = req.body;
     const image = req.file;
 
     if (!name || !subtitle || !description || !category_id || !image) {
@@ -47,6 +70,18 @@ const createTeamMember = async (req, res) => {
       category_id,
       image_url: image.location,
       image_key: image.key,
+      short_description: normalizeOptionalText(short_description),
+      role_tag: normalizeOptionalText(role_tag),
+      featured_title: normalizeOptionalText(featured_title),
+      featured_description: normalizeOptionalText(featured_description),
+      visionary_leadership_title: normalizeOptionalText(visionary_leadership_title),
+      visionary_leadership_description: normalizeOptionalText(visionary_leadership_description),
+      proven_expertise_title: normalizeOptionalText(proven_expertise_title),
+      proven_expertise_description: normalizeOptionalText(proven_expertise_description),
+      verification_label: normalizeOptionalText(verification_label),
+      verification_value: normalizeOptionalText(verification_value),
+      affiliation_label: normalizeOptionalText(affiliation_label),
+      affiliation_value: normalizeOptionalText(affiliation_value),
       created_by: req.user ? req.user.id : null,
     });
 
@@ -82,7 +117,24 @@ const getTeamMemberById = async (req, res) => {
 
 const updateTeamMember = async (req, res) => {
   try {
-    const { name, subtitle, description, category_id } = req.body;
+    const {
+      name,
+      subtitle,
+      description,
+      category_id,
+      short_description,
+      role_tag,
+      featured_title,
+      featured_description,
+      visionary_leadership_title,
+      visionary_leadership_description,
+      proven_expertise_title,
+      proven_expertise_description,
+      verification_label,
+      verification_value,
+      affiliation_label,
+      affiliation_value,
+    } = req.body;
     const image = req.file;
     const existing = await teamDao.getTeamMemberById(req.params.id);
 
@@ -94,6 +146,42 @@ const updateTeamMember = async (req, res) => {
     if (name !== undefined) updateData.name = name;
     if (subtitle !== undefined) updateData.subtitle = subtitle;
     if (description !== undefined) updateData.description = description;
+    if (short_description !== undefined) {
+      updateData.short_description = normalizeOptionalText(short_description);
+    }
+    if (role_tag !== undefined) {
+      updateData.role_tag = normalizeOptionalText(role_tag);
+    }
+    if (featured_title !== undefined) {
+      updateData.featured_title = normalizeOptionalText(featured_title);
+    }
+    if (featured_description !== undefined) {
+      updateData.featured_description = normalizeOptionalText(featured_description);
+    }
+    if (visionary_leadership_title !== undefined) {
+      updateData.visionary_leadership_title = normalizeOptionalText(visionary_leadership_title);
+    }
+    if (visionary_leadership_description !== undefined) {
+      updateData.visionary_leadership_description = normalizeOptionalText(visionary_leadership_description);
+    }
+    if (proven_expertise_title !== undefined) {
+      updateData.proven_expertise_title = normalizeOptionalText(proven_expertise_title);
+    }
+    if (proven_expertise_description !== undefined) {
+      updateData.proven_expertise_description = normalizeOptionalText(proven_expertise_description);
+    }
+    if (verification_label !== undefined) {
+      updateData.verification_label = normalizeOptionalText(verification_label);
+    }
+    if (verification_value !== undefined) {
+      updateData.verification_value = normalizeOptionalText(verification_value);
+    }
+    if (affiliation_label !== undefined) {
+      updateData.affiliation_label = normalizeOptionalText(affiliation_label);
+    }
+    if (affiliation_value !== undefined) {
+      updateData.affiliation_value = normalizeOptionalText(affiliation_value);
+    }
     if (category_id !== undefined) {
       const category = await teamCategoryDao.getTeamCategoryById(category_id);
       if (!category) {

@@ -5,7 +5,12 @@ const TABLE_NAME = "gcs_team_members";
 
 const getAllTeamMembers = async () => {
   const [rows] = await pool.query(
-    `SELECT members.*, categories.title AS category_title
+    `SELECT
+       members.*,
+       categories.title AS category_title,
+       categories.eyebrow AS category_eyebrow,
+       categories.heading AS category_heading,
+       categories.layout_type AS category_layout_type
      FROM ${TABLE_NAME} members
      INNER JOIN gcs_team_categories categories ON categories.id = members.category_id
      ORDER BY categories.title ASC, members.created_at DESC`,
@@ -14,7 +19,18 @@ const getAllTeamMembers = async () => {
 };
 
 const getTeamMemberById = async (id) => {
-  const [rows] = await pool.query(`SELECT * FROM ${TABLE_NAME} WHERE id = ?`, [id]);
+  const [rows] = await pool.query(
+    `SELECT
+       members.*,
+       categories.title AS category_title,
+       categories.eyebrow AS category_eyebrow,
+       categories.heading AS category_heading,
+       categories.layout_type AS category_layout_type
+     FROM ${TABLE_NAME} members
+     INNER JOIN gcs_team_categories categories ON categories.id = members.category_id
+     WHERE members.id = ?`,
+    [id],
+  );
   return rows[0];
 };
 
@@ -22,8 +38,29 @@ const createTeamMember = async (data) => {
   const id = uuidv4();
   await pool.query(
     `INSERT INTO ${TABLE_NAME}
-      (id, category_id, name, subtitle, image_url, image_key, description, created_by)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      (
+        id,
+        category_id,
+        name,
+        subtitle,
+        image_url,
+        image_key,
+        description,
+        short_description,
+        role_tag,
+        featured_title,
+        featured_description,
+        visionary_leadership_title,
+        visionary_leadership_description,
+        proven_expertise_title,
+        proven_expertise_description,
+        verification_label,
+        verification_value,
+        affiliation_label,
+        affiliation_value,
+        created_by
+      )
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id,
       data.category_id,
@@ -32,6 +69,18 @@ const createTeamMember = async (data) => {
       data.image_url,
       data.image_key,
       data.description,
+      data.short_description || null,
+      data.role_tag || null,
+      data.featured_title || null,
+      data.featured_description || null,
+      data.visionary_leadership_title || null,
+      data.visionary_leadership_description || null,
+      data.proven_expertise_title || null,
+      data.proven_expertise_description || null,
+      data.verification_label || null,
+      data.verification_value || null,
+      data.affiliation_label || null,
+      data.affiliation_value || null,
       data.created_by || null,
     ],
   );

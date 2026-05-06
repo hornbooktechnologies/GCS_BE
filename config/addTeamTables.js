@@ -1,5 +1,24 @@
 const pool = require("./db");
 
+const ensureColumn = async (tableName, columnName, definition) => {
+  const [rows] = await pool.query(
+    `
+      SELECT 1
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = ?
+        AND COLUMN_NAME = ?
+      LIMIT 1
+    `,
+    [tableName, columnName],
+  );
+
+  if (rows.length === 0) {
+    await pool.query(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${definition}`);
+    console.log(`Added ${columnName} to ${tableName}`);
+  }
+};
+
 const createTeamTables = async () => {
   try {
     console.log("Creating team tables...\n");
@@ -14,6 +33,22 @@ const createTeamTables = async () => {
         FOREIGN KEY (created_by) REFERENCES gcs_users(id) ON DELETE SET NULL
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
+
+    await ensureColumn(
+      "gcs_team_categories",
+      "eyebrow",
+      "VARCHAR(255) DEFAULT NULL AFTER title",
+    );
+    await ensureColumn(
+      "gcs_team_categories",
+      "heading",
+      "VARCHAR(255) DEFAULT NULL AFTER eyebrow",
+    );
+    await ensureColumn(
+      "gcs_team_categories",
+      "layout_type",
+      "VARCHAR(50) NOT NULL DEFAULT 'grid' AFTER heading",
+    );
 
     await pool.query(`
       CREATE TABLE IF NOT EXISTS gcs_team_members (
@@ -31,6 +66,67 @@ const createTeamTables = async () => {
         FOREIGN KEY (created_by) REFERENCES gcs_users(id) ON DELETE SET NULL
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
+
+    await ensureColumn(
+      "gcs_team_members",
+      "visionary_leadership_title",
+      "VARCHAR(255) DEFAULT NULL AFTER description",
+    );
+    await ensureColumn(
+      "gcs_team_members",
+      "visionary_leadership_description",
+      "LONGTEXT DEFAULT NULL AFTER visionary_leadership_title",
+    );
+    await ensureColumn(
+      "gcs_team_members",
+      "proven_expertise_title",
+      "VARCHAR(255) DEFAULT NULL AFTER visionary_leadership_description",
+    );
+    await ensureColumn(
+      "gcs_team_members",
+      "proven_expertise_description",
+      "LONGTEXT DEFAULT NULL AFTER proven_expertise_title",
+    );
+    await ensureColumn(
+      "gcs_team_members",
+      "verification_label",
+      "VARCHAR(255) DEFAULT NULL AFTER proven_expertise_description",
+    );
+    await ensureColumn(
+      "gcs_team_members",
+      "verification_value",
+      "VARCHAR(255) DEFAULT NULL AFTER verification_label",
+    );
+    await ensureColumn(
+      "gcs_team_members",
+      "affiliation_label",
+      "VARCHAR(255) DEFAULT NULL AFTER verification_value",
+    );
+    await ensureColumn(
+      "gcs_team_members",
+      "affiliation_value",
+      "VARCHAR(255) DEFAULT NULL AFTER affiliation_label",
+    );
+    await ensureColumn(
+      "gcs_team_members",
+      "short_description",
+      "TEXT DEFAULT NULL AFTER affiliation_value",
+    );
+    await ensureColumn(
+      "gcs_team_members",
+      "role_tag",
+      "VARCHAR(255) DEFAULT NULL AFTER short_description",
+    );
+    await ensureColumn(
+      "gcs_team_members",
+      "featured_title",
+      "VARCHAR(255) DEFAULT NULL AFTER role_tag",
+    );
+    await ensureColumn(
+      "gcs_team_members",
+      "featured_description",
+      "LONGTEXT DEFAULT NULL AFTER featured_title",
+    );
 
     console.log("gcs_team_categories and gcs_team_members tables created or already exist");
     console.log("\nTeam tables are ready.");

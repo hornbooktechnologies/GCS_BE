@@ -93,7 +93,9 @@ const createDoctor = async (req, res) => {
 
 const getAllDoctors = async (req, res) => {
   try {
-    const doctors = await doctorDao.getAllDoctors();
+    const doctors = await doctorDao.getAllDoctors({
+      speciality_id: req.query.speciality_id || null,
+    });
     return ok(res, "Doctors fetched successfully", { doctors });
   } catch (err) {
     console.error("Get doctors error:", err);

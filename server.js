@@ -42,7 +42,22 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = (process.env.CORS_ORIGINS || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
+  })
+);
 app.use(express.json());
 app.use(activityLogger);
 
@@ -98,7 +113,7 @@ function getLocalIPAddress() {
   return "localhost";
 }
 
-app.listen(PORT, "0.0.0.0", () => {
+app.listen(PORT, "::", () => {
   const localIP = getLocalIPAddress();
   console.log(`Server running on port ${PORT}`);
   console.log(`Local:   http://localhost:${PORT}`);

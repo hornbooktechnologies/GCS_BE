@@ -6,8 +6,15 @@ const TABLE_NAME = "gcs_team_categories";
 const createTeamCategory = async (data) => {
   const id = uuidv4();
   await pool.query(
-    `INSERT INTO ${TABLE_NAME} (id, title, created_by) VALUES (?, ?, ?)`,
-    [id, data.title, data.created_by || null],
+    `INSERT INTO ${TABLE_NAME} (id, title, eyebrow, heading, layout_type, created_by) VALUES (?, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      data.title,
+      data.eyebrow || null,
+      data.heading || null,
+      data.layout_type || "grid",
+      data.created_by || null,
+    ],
   );
   return { id, ...data };
 };

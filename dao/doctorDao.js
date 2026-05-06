@@ -16,12 +16,22 @@ const getSpecialitiesByDoctorId = async (doctorId) => {
   return rows;
 };
 
-const getAllDoctors = async () => {
-  const [rows] = await pool.query(
-    `SELECT d.*
-     FROM ${DOCTOR_TABLE} d
-     ORDER BY d.created_at DESC`,
-  );
+const getAllDoctors = async (filters = {}) => {
+  const values = [];
+  let query = `SELECT DISTINCT d.*
+     FROM ${DOCTOR_TABLE} d`;
+
+  if (filters.speciality_id) {
+    query += `
+     INNER JOIN ${DOCTOR_SPECIALITY_TABLE} ds ON ds.doctor_id = d.id
+     WHERE ds.speciality_id = ?`;
+    values.push(filters.speciality_id);
+  }
+
+  query += `
+     ORDER BY d.created_at DESC`;
+
+  const [rows] = await pool.query(query, values);
 
   if (rows.length === 0) {
     return [];
