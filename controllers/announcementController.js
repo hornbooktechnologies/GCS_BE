@@ -13,7 +13,7 @@ const s3 = new S3Client({
 
 const createAnnouncement = async (req, res) => {
   try {
-    const { title, url, is_new } = req.body;
+    const { title, url, is_new, category = "Notices" } = req.body;
     const pdfFile = req.files?.pdf?.[0];
     const imageFile = req.files?.image?.[0];
 
@@ -40,10 +40,11 @@ const createAnnouncement = async (req, res) => {
       is_new:
         is_new === true || is_new === "true" || is_new === 1 || is_new === "1",
       url: url || null,
-      pdf_url: pdfFile.location,
-      pdf_key: pdfFile.key,
+      pdf_url: pdfFile ? pdfFile.location : null,
+      pdf_key: pdfFile ? pdfFile.key : null,
       image_url: imageFile ? imageFile.location : null,
       image_key: imageFile ? imageFile.key : null,
+      category: category?.trim() || "Notices",
       created_by: req.user ? req.user.id : null,
     });
 
@@ -80,7 +81,7 @@ const getAnnouncementById = async (req, res) => {
 const updateAnnouncement = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, url, is_new } = req.body;
+    const { title, url, is_new, category } = req.body;
     const pdfFile = req.files?.pdf?.[0];
     const imageFile = req.files?.image?.[0];
 
@@ -97,6 +98,9 @@ const updateAnnouncement = async (req, res) => {
         is_new === true || is_new === "true" || is_new === 1 || is_new === "1"
           ? 1
           : 0;
+    }
+    if (category !== undefined) {
+      updateData.category = category?.trim() || "Notices";
     }
 
     if (pdfFile && imageFile) {

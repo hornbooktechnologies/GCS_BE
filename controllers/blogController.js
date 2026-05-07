@@ -19,6 +19,9 @@ const createBlog = async (req, res) => {
       author_name,
       author_designation,
       blog_date,
+      category,
+      status = "draft",
+      slug,
     } = req.body;
     const thumbnailImage = req.files?.thumbnail_image?.[0];
     const detailPageImage = req.files?.detail_image?.[0];
@@ -32,6 +35,12 @@ const createBlog = async (req, res) => {
     ) {
       return error(res, 400, "All blog fields are required", {
         code: "MISSING_FIELDS",
+      });
+    }
+
+    if (!["draft", "published"].includes(status)) {
+      return error(res, 400, "Status must be either 'draft' or 'published'", {
+        code: "INVALID_STATUS",
       });
     }
 
@@ -54,6 +63,9 @@ const createBlog = async (req, res) => {
       author_name,
       author_designation,
       blog_date,
+      category: category?.trim() || null,
+      status,
+      slug: slug?.trim() || null,
       created_by: req.user ? req.user.id : null,
     });
 
@@ -66,8 +78,24 @@ const createBlog = async (req, res) => {
 
 const getAllBlogs = async (req, res) => {
   try {
-    const blogs = await blogDao.getAllBlogs();
-    return ok(res, "Blogs fetched successfully", { blogs });
+    const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, Number.parseInt(req.query.limit, 10) || 12));
+    const status = req.query.status?.trim() || "published";
+
+    if (!["draft", "published", "all"].includes(status)) {
+      return error(res, 400, "Status must be 'published', 'draft', or 'all'", {
+        code: "INVALID_STATUS",
+      });
+    }
+
+    const result = await blogDao.getAllBlogs(page, limit, { status });
+    return ok(res, "Blogs fetched successfully", {
+      items: result.rows,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      pages: result.pages,
+    });
   } catch (err) {
     console.error("Get blogs error:", err);
     return error(res, 500, "Internal server error", { details: err.message });
@@ -87,6 +115,19 @@ const getBlogById = async (req, res) => {
   }
 };
 
+const getBlogBySlug = async (req, res) => {
+  try {
+    const blog = await blogDao.getBlogBySlug(req.params.slug);
+    if (!blog) {
+      return error(res, 404, "Blog not found");
+    }
+    return ok(res, "Blog fetched successfully", { item: blog });
+  } catch (err) {
+    console.error("Get blog by slug error:", err);
+    return error(res, 500, "Internal server error", { details: err.message });
+  }
+};
+
 const updateBlog = async (req, res) => {
   try {
     const { id } = req.params;
@@ -96,6 +137,9 @@ const updateBlog = async (req, res) => {
       author_name,
       author_designation,
       blog_date,
+      category,
+      status,
+      slug,
     } = req.body;
     const thumbnailImage = req.files?.thumbnail_image?.[0];
     const detailPageImage = req.files?.detail_image?.[0];
@@ -103,6 +147,12 @@ const updateBlog = async (req, res) => {
     const existing = await blogDao.getBlogById(id);
     if (!existing) {
       return error(res, 404, "Blog not found");
+    }
+
+    if (status !== undefined && !["draft", "published"].includes(status)) {
+      return error(res, 400, "Status must be either 'draft' or 'published'", {
+        code: "INVALID_STATUS",
+      });
     }
 
     const updateData = {};
@@ -113,6 +163,9 @@ const updateBlog = async (req, res) => {
       updateData.author_designation = author_designation;
     }
     if (blog_date !== undefined) updateData.blog_date = blog_date;
+    if (category !== undefined) updateData.category = category?.trim() || null;
+    if (status !== undefined) updateData.status = status;
+    if (slug !== undefined) updateData.slug = slug;
 
     if (thumbnailImage) {
       updateData.thumbnail_image_url = thumbnailImage.location;
@@ -154,8 +207,8 @@ const updateBlog = async (req, res) => {
       return error(res, 400, "No fields to update", { code: "NO_UPDATE_DATA" });
     }
 
-    await blogDao.updateBlog(id, updateData);
-    return ok(res, "Blog updated successfully");
+    const updatedBlog = await blogDao.updateBlog(id, updateData);
+    return ok(res, "Blog updated successfully", { item: updatedBlog });
   } catch (err) {
     console.error("Update blog error:", err);
     return error(res, 500, "Internal server error", { details: err.message });
@@ -232,6 +285,7 @@ module.exports = {
   createBlog,
   getAllBlogs,
   getBlogById,
+  getBlogBySlug,
   updateBlog,
   deleteBlog,
   reorderBlogs,

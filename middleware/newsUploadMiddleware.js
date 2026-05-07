@@ -12,6 +12,27 @@ const s3 = new S3Client({
   },
 });
 
+const imageFilter = (req, file, cb) => {
+  const extension = path.extname(file.originalname).toLowerCase();
+  const allowedImageTypes = [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+  ];
+  const allowedImageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+
+  if (
+    allowedImageTypes.includes(file.mimetype) &&
+    allowedImageExtensions.includes(extension)
+  ) {
+    return cb(null, true);
+  }
+
+  cb(new Error("Only image files (JPG, PNG, GIF, WebP) are allowed"));
+};
+
 const newsUpload = multer({
   storage: multerS3({
     s3,
@@ -21,31 +42,26 @@ const newsUpload = multer({
       cb(null, { fieldName: file.fieldname });
     },
     key: (req, file, cb) => {
-      const fileName = `${Date.now().toString()}-${file.originalname}`;
-      cb(null, `news/${fileName}`);
+      const timestamp = Date.now().toString();
+      const fileName = `${timestamp}-${file.originalname}`;
+
+      if (file.fieldname === "thumbnail_image") {
+        cb(null, `news/thumbnails/${fileName}`);
+      } else if (file.fieldname === "detail_image") {
+        cb(null, `news/details/${fileName}`);
+      } else {
+        // Default for backward compatibility
+        cb(null, `news/${fileName}`);
+      }
     },
   }),
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter: (req, file, cb) => {
-    const extension = path.extname(file.originalname).toLowerCase();
-    const allowedImageTypes = [
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
-      "image/gif",
-      "image/webp",
-    ];
-    const allowedImageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
-
-    if (
-      file.fieldname === "image" &&
-      allowedImageTypes.includes(file.mimetype) &&
-      allowedImageExtensions.includes(extension)
-    ) {
-      return cb(null, true);
+    if (file.fieldname === "thumbnail_image" || file.fieldname === "detail_image") {
+      imageFilter(req, file, cb);
+    } else {
+      cb(new Error("Invalid field name. Use 'thumbnail_image' or 'detail_image'"));
     }
-
-    cb(new Error("Only image files are allowed for the image field."));
   },
 });
 

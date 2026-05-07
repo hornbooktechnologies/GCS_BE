@@ -49,7 +49,7 @@ const createNewsletter = async (newsletterData) => {
 
 const getAllNewsletters = async () => {
   const [rows] = await pool.query(
-    `SELECT * FROM ${TABLE_NAME} ORDER BY year DESC, created_at DESC`,
+    `SELECT * FROM ${TABLE_NAME} ORDER BY year DESC, created_at ASC`,
   );
   return rows;
 };

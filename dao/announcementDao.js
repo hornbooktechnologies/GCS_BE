@@ -12,6 +12,7 @@ const createAnnouncement = async (announcementData) => {
     pdf_key,
     image_url,
     image_key,
+    category = "Notices",
     display_order,
     created_by,
   } = announcementData;
@@ -26,8 +27,8 @@ const createAnnouncement = async (announcementData) => {
   }
 
   await pool.query(
-    `INSERT INTO ${TABLE_NAME} (id, title, is_new, url, pdf_url, pdf_key, image_url, image_key, display_order, created_by)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO ${TABLE_NAME} (id, title, is_new, url, pdf_url, pdf_key, image_url, image_key, category, display_order, created_by)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id,
       title,
@@ -37,6 +38,7 @@ const createAnnouncement = async (announcementData) => {
       pdf_key,
       image_url || null,
       image_key || null,
+      category,
       order,
       created_by || null,
     ],
@@ -51,6 +53,7 @@ const createAnnouncement = async (announcementData) => {
     pdf_key,
     image_url: image_url || null,
     image_key: image_key || null,
+    category,
     display_order: order,
     created_by: created_by || null,
   };

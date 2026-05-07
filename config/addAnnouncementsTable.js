@@ -14,10 +14,13 @@ const createAnnouncementsTable = async () => {
         pdf_key VARCHAR(500) DEFAULT NULL,
         image_url VARCHAR(500) DEFAULT NULL,
         image_key VARCHAR(500) DEFAULT NULL,
+        category VARCHAR(100) NOT NULL DEFAULT 'Notices',
         display_order INT DEFAULT 0,
         created_by VARCHAR(36) DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        KEY idx_gcs_announcements_category (category),
+        KEY idx_gcs_announcements_is_new (is_new),
         FOREIGN KEY (created_by) REFERENCES gcs_users(id) ON DELETE SET NULL
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);

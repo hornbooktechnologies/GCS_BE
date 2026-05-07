@@ -23,6 +23,7 @@ router.post(
 );
 
 router.get("/", blogController.getAllBlogs);
+router.get("/by-slug/:slug", blogController.getBlogBySlug);
 
 router.get(
   "/:id",

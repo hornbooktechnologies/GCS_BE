@@ -8,6 +8,9 @@ const createBlogTable = async () => {
       CREATE TABLE IF NOT EXISTS gcs_blogs (
         id VARCHAR(36) PRIMARY KEY,
         title VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) NOT NULL UNIQUE,
+        category VARCHAR(100) DEFAULT NULL,
+        status ENUM('draft','published') NOT NULL DEFAULT 'published',
         thumbnail_image_url VARCHAR(500) NOT NULL,
         thumbnail_image_key VARCHAR(500) NOT NULL,
         detail_image_url VARCHAR(500) NOT NULL,
@@ -20,6 +23,8 @@ const createBlogTable = async () => {
         created_by VARCHAR(36) DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        KEY idx_gcs_blogs_status (status),
+        KEY idx_gcs_blogs_blog_date (blog_date),
         FOREIGN KEY (created_by) REFERENCES gcs_users(id) ON DELETE SET NULL
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
