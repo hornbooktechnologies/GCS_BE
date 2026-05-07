@@ -16,6 +16,10 @@ const deleteS3Object = async (key) => {
     return;
   }
 
+  if (key.startsWith("legacy-external:") || /^https?:\/\//i.test(key)) {
+    return;
+  }
+
   await s3.send(
     new DeleteObjectCommand({
       Bucket: process.env.AWS_BUCKET_NAME,

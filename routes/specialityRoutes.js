@@ -5,6 +5,7 @@ const { verifyToken, verifyPermission } = require("../middleware/authMiddleware"
 const specialityUpload = require("../middleware/specialityUploadMiddleware");
 
 router.get("/", specialityController.getAllSpecialities);
+router.get("/by-slug/:slug", specialityController.getSpecialityBySlug);
 router.get("/:id", specialityController.getSpecialityById);
 router.post(
   "/",

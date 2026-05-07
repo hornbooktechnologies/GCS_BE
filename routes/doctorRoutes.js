@@ -5,6 +5,7 @@ const { verifyToken, verifyPermission } = require("../middleware/authMiddleware"
 const doctorUpload = require("../middleware/doctorUploadMiddleware");
 
 router.get("/", doctorController.getAllDoctors);
+router.get("/by-slug/:slug", doctorController.getDoctorBySlug);
 router.get("/:id", doctorController.getDoctorById);
 router.post("/", verifyToken, verifyPermission("doctors", "create"), doctorUpload.single("image"), doctorController.createDoctor);
 router.put("/:id", verifyToken, verifyPermission("doctors", "edit"), doctorUpload.single("image"), doctorController.updateDoctor);

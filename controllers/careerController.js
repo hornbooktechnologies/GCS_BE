@@ -34,33 +34,26 @@ const getTableNameForType = (type) => {
   return null;
 };
 
-const createCurrentOpening = async (req, res) => {
-  try {
-    const { position, education, description, experience } = req.body;
-    if (!position || !education || !description || !experience) {
-      return error(res, 400, "All current opening fields are required", {
-        code: "MISSING_FIELDS",
-      });
-    }
+const VALID_OPENING_STATUSES = ["draft", "open", "closed"];
 
-    const opening = await careerDao.createCurrentOpening({
-      position,
-      education,
-      description,
-      experience,
-      created_by: req.user ? req.user.id : null,
-    });
-    return created(res, "Current opening created successfully", opening);
-  } catch (err) {
-    console.error("Create current opening error:", err);
-    return error(res, 500, "Internal server error", { details: err.message });
-  }
-};
+// ─── Current Openings ─────────────────────────────────────────────────────────
 
 const getAllCurrentOpenings = async (req, res) => {
   try {
-    const openings = await careerDao.getAllCurrentOpenings();
-    return ok(res, "Current openings fetched successfully", { openings });
+    const { search, status, department, page = 1, limit = 20 } = req.query;
+    const result = await careerDao.getAllCurrentOpenings({
+      search: search?.trim() || undefined,
+      status: status || undefined,
+      department: department || undefined,
+      page: Math.max(1, Number.parseInt(page, 10) || 1),
+      limit: Math.min(100, Math.max(1, Number.parseInt(limit, 10) || 20)),
+    });
+    return ok(res, "Current openings fetched successfully", {
+      openings: result.rows,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+    });
   } catch (err) {
     console.error("Get current openings error:", err);
     return error(res, 500, "Internal server error", { details: err.message });
@@ -80,13 +73,72 @@ const getCurrentOpeningById = async (req, res) => {
   }
 };
 
+const getCurrentOpeningBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const opening = await careerDao.getCurrentOpeningBySlug(slug);
+    if (!opening) {
+      return error(res, 404, "Current opening not found", { code: "NOT_FOUND" });
+    }
+    return ok(res, "Current opening fetched successfully", { opening });
+  } catch (err) {
+    console.error("Get current opening by slug error:", err);
+    return error(res, 500, "Internal server error", { details: err.message });
+  }
+};
+
+const createCurrentOpening = async (req, res) => {
+  try {
+    const {
+      position, education, description, experience,
+      status = "open", location, department, closing_date, salary_range,
+    } = req.body;
+
+    if (!position || !education || !description || !experience) {
+      return error(res, 400, "All current opening fields are required", {
+        code: "MISSING_FIELDS",
+      });
+    }
+
+    if (status && !VALID_OPENING_STATUSES.includes(status)) {
+      return error(res, 400, "Invalid status value", { code: "INVALID_DATA" });
+    }
+
+    const opening = await careerDao.createCurrentOpening({
+      position,
+      education,
+      description,
+      experience,
+      status,
+      location: location || null,
+      department: department || null,
+      closing_date: closing_date || null,
+      salary_range: salary_range || null,
+      created_by: req.user ? req.user.id : null,
+    });
+    return created(res, "Current opening created successfully", opening);
+  } catch (err) {
+    console.error("Create current opening error:", err);
+    return error(res, 500, "Internal server error", { details: err.message });
+  }
+};
+
 const updateCurrentOpening = async (req, res) => {
   try {
     const { id } = req.params;
-    const { position, education, description, experience } = req.body;
+    const {
+      position, education, description, experience,
+      status, location, department, closing_date, salary_range,
+      regenerate_slug,
+    } = req.body;
+
     const existing = await careerDao.getCurrentOpeningById(id);
     if (!existing) {
       return error(res, 404, "Current opening not found");
+    }
+
+    if (status !== undefined && !VALID_OPENING_STATUSES.includes(status)) {
+      return error(res, 400, "Invalid status value", { code: "INVALID_DATA" });
     }
 
     const updateData = {};
@@ -94,6 +146,13 @@ const updateCurrentOpening = async (req, res) => {
     if (education !== undefined) updateData.education = education;
     if (description !== undefined) updateData.description = description;
     if (experience !== undefined) updateData.experience = experience;
+    if (status !== undefined) updateData.status = status;
+    if (location !== undefined) updateData.location = location || null;
+    if (department !== undefined) updateData.department = department || null;
+    if (closing_date !== undefined) updateData.closing_date = closing_date || null;
+    if (salary_range !== undefined) updateData.salary_range = salary_range || null;
+    if (regenerate_slug !== undefined) updateData.regenerate_slug = regenerate_slug;
+
     if (Object.keys(updateData).length === 0) {
       return error(res, 400, "No fields to update", { code: "NO_UPDATE_DATA" });
     }
@@ -118,6 +177,8 @@ const deleteCurrentOpening = async (req, res) => {
     return error(res, 500, "Internal server error", { details: err.message });
   }
 };
+
+// ─── Career Applications ───────────────────────────────────────────────────────
 
 const submitCareerApplication = async (req, res) => {
   try {
@@ -170,13 +231,66 @@ const submitCareerApplication = async (req, res) => {
 
 const getAllCareerApplications = async (req, res) => {
   try {
-    const applications = await careerDao.getAllCareerApplications();
-    return ok(res, "Career applications fetched successfully", { applications });
+    const { search, status, page = 1, limit = 50 } = req.query;
+    const result = await careerDao.getAllCareerApplications({
+      search: search?.trim() || undefined,
+      status: status || undefined,
+      page: Math.max(1, Number.parseInt(page, 10) || 1),
+      limit: Math.min(200, Math.max(1, Number.parseInt(limit, 10) || 50)),
+    });
+    return ok(res, "Career applications fetched successfully", {
+      applications: result.rows,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+    });
   } catch (err) {
     console.error("Get career applications error:", err);
     return error(res, 500, "Internal server error", { details: err.message });
   }
 };
+
+const getCareerApplicationById = async (req, res) => {
+  try {
+    const application = await careerDao.getCareerApplicationById(req.params.id);
+    if (!application) {
+      return error(res, 404, "Application not found");
+    }
+    return ok(res, "Application fetched successfully", { application });
+  } catch (err) {
+    console.error("Get career application error:", err);
+    return error(res, 500, "Internal server error", { details: err.message });
+  }
+};
+
+const VALID_APP_STATUSES = ["pending", "reviewing", "shortlisted", "rejected", "hired"];
+
+const updateCareerApplicationStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!status || !VALID_APP_STATUSES.includes(status)) {
+      return error(res, 400, "Valid status is required", {
+        code: "INVALID_DATA",
+        allowed: VALID_APP_STATUSES,
+      });
+    }
+
+    const existing = await careerDao.getCareerApplicationById(id);
+    if (!existing) {
+      return error(res, 404, "Application not found");
+    }
+
+    await careerDao.updateCareerApplicationStatus(id, status);
+    return ok(res, "Application status updated successfully");
+  } catch (err) {
+    console.error("Update application status error:", err);
+    return error(res, 500, "Internal server error", { details: err.message });
+  }
+};
+
+// ─── Asset Positions (Teaching / Internship) ──────────────────────────────────
 
 const createAssetPosition = async (req, res, type) => {
   try {
@@ -201,6 +315,7 @@ const createAssetPosition = async (req, res, type) => {
       image_key: image.key,
       pdf_url: pdf.location,
       pdf_key: pdf.key,
+      display_order: req.body.display_order ? Number(req.body.display_order) : 0,
       created_by: req.user ? req.user.id : null,
     });
 
@@ -250,6 +365,7 @@ const updateAssetPosition = async (req, res, type) => {
 
     const updateData = {};
     if (title !== undefined) updateData.title = title;
+    if (req.body.display_order !== undefined) updateData.display_order = Number(req.body.display_order);
     if (image) {
       updateData.image_url = image.location;
       updateData.image_key = image.key;
@@ -265,16 +381,12 @@ const updateAssetPosition = async (req, res, type) => {
     await careerDao.updateAssetPosition(tableName, req.params.id, updateData);
 
     if (image && existing.image_key) {
-      try {
-        await deleteS3Object(existing.image_key);
-      } catch (s3Err) {
+      try { await deleteS3Object(existing.image_key); } catch (s3Err) {
         console.error(`Error deleting old ${type} image from S3:`, s3Err);
       }
     }
     if (pdf && existing.pdf_key) {
-      try {
-        await deleteS3Object(existing.pdf_key);
-      } catch (s3Err) {
+      try { await deleteS3Object(existing.pdf_key); } catch (s3Err) {
         console.error(`Error deleting old ${type} PDF from S3:`, s3Err);
       }
     }
@@ -294,14 +406,10 @@ const deleteAssetPosition = async (req, res, type) => {
       return error(res, 404, `${type} position not found`);
     }
 
-    try {
-      await deleteS3Object(result.imageKey);
-    } catch (s3Err) {
+    try { await deleteS3Object(result.imageKey); } catch (s3Err) {
       console.error(`Error deleting ${type} image from S3:`, s3Err);
     }
-    try {
-      await deleteS3Object(result.pdfKey);
-    } catch (s3Err) {
+    try { await deleteS3Object(result.pdfKey); } catch (s3Err) {
       console.error(`Error deleting ${type} PDF from S3:`, s3Err);
     }
 
@@ -313,18 +421,25 @@ const deleteAssetPosition = async (req, res, type) => {
 };
 
 module.exports = {
-  createCurrentOpening,
+  // Openings
   getAllCurrentOpenings,
   getCurrentOpeningById,
+  getCurrentOpeningBySlug,
+  createCurrentOpening,
   updateCurrentOpening,
   deleteCurrentOpening,
+  // Applications
   submitCareerApplication,
   getAllCareerApplications,
+  getCareerApplicationById,
+  updateCareerApplicationStatus,
+  // Teaching positions
   createTeachingPosition: (req, res) => createAssetPosition(req, res, "teaching"),
   getAllTeachingPositions: (req, res) => getAllAssetPositions(req, res, "teaching"),
   getTeachingPositionById: (req, res) => getAssetPositionById(req, res, "teaching"),
   updateTeachingPosition: (req, res) => updateAssetPosition(req, res, "teaching"),
   deleteTeachingPosition: (req, res) => deleteAssetPosition(req, res, "teaching"),
+  // Internship positions
   createInternshipPosition: (req, res) => createAssetPosition(req, res, "internship"),
   getAllInternshipPositions: (req, res) => getAllAssetPositions(req, res, "internship"),
   getInternshipPositionById: (req, res) => getAssetPositionById(req, res, "internship"),

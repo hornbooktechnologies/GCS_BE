@@ -4,7 +4,9 @@ const careerController = require("../controllers/careerController");
 const { verifyToken, verifyPermission } = require("../middleware/authMiddleware");
 const careerUpload = require("../middleware/careerUploadMiddleware");
 
+// Current Openings
 router.get("/current-openings", careerController.getAllCurrentOpenings);
+router.get("/current-openings/by-slug/:slug", careerController.getCurrentOpeningBySlug); // MUST be before /:id
 router.get("/current-openings/:id", careerController.getCurrentOpeningById);
 router.post(
   "/current-openings",
@@ -25,38 +27,42 @@ router.delete(
   careerController.deleteCurrentOpening,
 );
 
-router.post(
-  "/applications",
-  careerUpload.single("resume"),
-  careerController.submitCareerApplication,
-);
+// Applications
+router.post("/applications", careerUpload.single("resume"), careerController.submitCareerApplication);
 router.get(
   "/applications",
   verifyToken,
   verifyPermission("career", "list"),
   careerController.getAllCareerApplications,
 );
+router.get(
+  "/applications/:id",
+  verifyToken,
+  verifyPermission("career", "list"),
+  careerController.getCareerApplicationById,
+);
+router.patch(
+  "/applications/:id/status",
+  verifyToken,
+  verifyPermission("career", "edit"),
+  careerController.updateCareerApplicationStatus,
+);
 
+// Teaching Positions
 router.get("/teaching-positions", careerController.getAllTeachingPositions);
 router.get("/teaching-positions/:id", careerController.getTeachingPositionById);
 router.post(
   "/teaching-positions",
   verifyToken,
   verifyPermission("career", "create"),
-  careerUpload.fields([
-    { name: "image", maxCount: 1 },
-    { name: "pdf", maxCount: 1 },
-  ]),
+  careerUpload.fields([{ name: "image", maxCount: 1 }, { name: "pdf", maxCount: 1 }]),
   careerController.createTeachingPosition,
 );
 router.put(
   "/teaching-positions/:id",
   verifyToken,
   verifyPermission("career", "edit"),
-  careerUpload.fields([
-    { name: "image", maxCount: 1 },
-    { name: "pdf", maxCount: 1 },
-  ]),
+  careerUpload.fields([{ name: "image", maxCount: 1 }, { name: "pdf", maxCount: 1 }]),
   careerController.updateTeachingPosition,
 );
 router.delete(
@@ -66,26 +72,21 @@ router.delete(
   careerController.deleteTeachingPosition,
 );
 
+// Internship Positions
 router.get("/internship-positions", careerController.getAllInternshipPositions);
 router.get("/internship-positions/:id", careerController.getInternshipPositionById);
 router.post(
   "/internship-positions",
   verifyToken,
   verifyPermission("career", "create"),
-  careerUpload.fields([
-    { name: "image", maxCount: 1 },
-    { name: "pdf", maxCount: 1 },
-  ]),
+  careerUpload.fields([{ name: "image", maxCount: 1 }, { name: "pdf", maxCount: 1 }]),
   careerController.createInternshipPosition,
 );
 router.put(
   "/internship-positions/:id",
   verifyToken,
   verifyPermission("career", "edit"),
-  careerUpload.fields([
-    { name: "image", maxCount: 1 },
-    { name: "pdf", maxCount: 1 },
-  ]),
+  careerUpload.fields([{ name: "image", maxCount: 1 }, { name: "pdf", maxCount: 1 }]),
   careerController.updateInternshipPosition,
 );
 router.delete(

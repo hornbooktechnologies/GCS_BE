@@ -24,6 +24,12 @@
     "add-health-camps-table": "node config/addHealthCampsTable.js",
     "add-specialities-tables": "node config/addSpecialitiesTables.js",
     "add-doctors-tables": "node config/addDoctorsTables.js",
+    "upgrade-doctor-schema": "node config/upgradeDoctorSchema.js",
+    "upgrade-speciality-schema": "node config/upgradeSpecialitySchema.js",
+    "upgrade-career-schema": "node config/upgradeCareerSchema.js",
+    "seed-career-data": "node config/seedCareerData.js",
+    "seed-downloads-data": "node config/seedDownloadsData.js",
+    "seed-doctor-directory": "node config/seedDoctorDirectoryData.js",
     "add-sympotms-table": "node config/addSympotmsTable.js",
     "add-roles-permissions-tables": "node config/addRolesPermissionsTables.js"
   },

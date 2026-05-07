@@ -36,12 +36,51 @@ const normalizeSpecialityIds = (rawValue) => {
       if (Array.isArray(parsed)) {
         return [...new Set(parsed.filter(Boolean))];
       }
-    } catch (error) {
+    } catch (parseError) {
       return [...new Set(rawValue.split(",").map((item) => item.trim()).filter(Boolean))];
     }
   }
 
   return [];
+};
+
+const parseNonNegativeInt = (value) => {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    return null;
+  }
+
+  return parsed;
+};
+
+const parseBoolean = (value, defaultValue = false) => {
+  if (value === undefined || value === null || value === "") {
+    return defaultValue;
+  }
+
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value === "number") {
+    return value === 1;
+  }
+
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["true", "1", "yes", "on"].includes(normalized)) {
+      return true;
+    }
+    if (["false", "0", "no", "off"].includes(normalized)) {
+      return false;
+    }
+  }
+
+  return defaultValue;
 };
 
 const validateSpecialities = async (specialityIds) => {
@@ -58,11 +97,20 @@ const createDoctor = async (req, res) => {
   try {
     const { name, experience, designation, description } = req.body;
     const specialityIds = normalizeSpecialityIds(req.body.speciality_ids);
+    const displayOrder = parseNonNegativeInt(req.body.display_order);
+    const parsedExperience = parseNonNegativeInt(experience);
     const image = req.file;
+    const isHod = parseBoolean(req.body.is_hod, false);
 
-    if (!name || !experience || !designation || !isMeaningfulHtml(description) || !image || specialityIds.length === 0) {
+    if (!name || parsedExperience === null || !designation || !isMeaningfulHtml(description) || !image || specialityIds.length === 0) {
       return error(res, 400, "All doctor fields are required", {
         code: "MISSING_FIELDS",
+      });
+    }
+
+    if (displayOrder === null && req.body.display_order !== undefined && req.body.display_order !== "") {
+      return error(res, 400, "Display order must be a non-negative integer", {
+        code: "INVALID_DATA",
       });
     }
 
@@ -75,10 +123,12 @@ const createDoctor = async (req, res) => {
 
     const doctor = await doctorDao.createDoctor({
       name: name.trim(),
-      experience: experience.trim(),
+      experience: parsedExperience,
       designation: designation.trim(),
       description,
       speciality_ids: specialityIds,
+      display_order: displayOrder ?? 0,
+      is_hod: isHod,
       image_url: image.location,
       image_key: image.key,
       created_by: req.user ? req.user.id : null,
@@ -93,10 +143,16 @@ const createDoctor = async (req, res) => {
 
 const getAllDoctors = async (req, res) => {
   try {
-    const doctors = await doctorDao.getAllDoctors({
-      speciality_id: req.query.speciality_id || null,
+    const { search, speciality_id, category, page = 1, limit = 20 } = req.query;
+    const result = await doctorDao.getAllDoctors({
+      search: search?.trim() || undefined,
+      speciality_id: speciality_id || undefined,
+      category: category || undefined,
+      page: Math.max(1, Number.parseInt(page, 10) || 1),
+      limit: Math.min(100, Math.max(1, Number.parseInt(limit, 10) || 20)),
     });
-    return ok(res, "Doctors fetched successfully", { doctors });
+
+    return ok(res, "Doctors fetched", result);
   } catch (err) {
     console.error("Get doctors error:", err);
     return error(res, 500, "Internal server error", { details: err.message });
@@ -116,6 +172,20 @@ const getDoctorById = async (req, res) => {
   }
 };
 
+const getDoctorBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const doctor = await doctorDao.getDoctorBySlug(slug);
+    if (!doctor) {
+      return error(res, 404, "Doctor not found", { code: "NOT_FOUND" });
+    }
+    return ok(res, "Doctor fetched", { doctor });
+  } catch (err) {
+    console.error("Get doctor by slug error:", err);
+    return error(res, 500, "Internal server error", { details: err.message });
+  }
+};
+
 const updateDoctor = async (req, res) => {
   try {
     const { name, experience, designation, description } = req.body;
@@ -129,13 +199,33 @@ const updateDoctor = async (req, res) => {
 
     const updateData = {};
     if (name !== undefined) updateData.name = name.trim();
-    if (experience !== undefined) updateData.experience = experience.trim();
+    if (experience !== undefined) {
+      const parsedExperience = parseNonNegativeInt(experience);
+      if (parsedExperience === null) {
+        return error(res, 400, "Experience must be a non-negative integer", {
+          code: "INVALID_DATA",
+        });
+      }
+      updateData.experience = parsedExperience;
+    }
     if (designation !== undefined) updateData.designation = designation.trim();
     if (description !== undefined) {
       if (!isMeaningfulHtml(description)) {
         return error(res, 400, "Description is required", { code: "MISSING_FIELDS" });
       }
       updateData.description = description;
+    }
+    if (req.body.display_order !== undefined) {
+      const displayOrder = parseNonNegativeInt(req.body.display_order);
+      if (displayOrder === null) {
+        return error(res, 400, "Display order must be a non-negative integer", {
+          code: "INVALID_DATA",
+        });
+      }
+      updateData.display_order = displayOrder;
+    }
+    if (req.body.is_hod !== undefined) {
+      updateData.is_hod = parseBoolean(req.body.is_hod, false);
     }
     if (specialityIds !== null) {
       if (specialityIds.length === 0) {
@@ -197,6 +287,7 @@ module.exports = {
   createDoctor,
   getAllDoctors,
   getDoctorById,
+  getDoctorBySlug,
   updateDoctor,
   deleteDoctor,
 };

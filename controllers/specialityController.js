@@ -32,9 +32,40 @@ const isMeaningfulHtml = (html) =>
 
 const isValidCategory = (category) => ["general", "super"].includes(category);
 
+const parseServices = (rawValue) => {
+  if (!rawValue) {
+    return [];
+  }
+
+  if (Array.isArray(rawValue)) {
+    return rawValue;
+  }
+
+  if (typeof rawValue === "string") {
+    try {
+      const parsed = JSON.parse(rawValue);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (parseError) {
+      return [];
+    }
+  }
+
+  return [];
+};
+
+const normalizeServices = (services) =>
+  services
+    .map((item, index) => ({
+      title: String(item?.title || "").trim(),
+      display_order: Number.isInteger(item?.display_order) ? item.display_order : index,
+    }))
+    .filter((item) => item.title);
+
 const getAllSpecialities = async (req, res) => {
   try {
-    const specialities = await specialityDao.getAllSpecialities();
+    const specialities = await specialityDao.getAllSpecialities({
+      category: req.query.category || undefined,
+    });
     return ok(res, "Specialities fetched successfully", { specialities });
   } catch (err) {
     console.error("Get specialities error:", err);
@@ -55,12 +86,26 @@ const getSpecialityById = async (req, res) => {
   }
 };
 
+const getSpecialityBySlug = async (req, res) => {
+  try {
+    const speciality = await specialityDao.getSpecialityBySlug(req.params.slug);
+    if (!speciality) {
+      return error(res, 404, "Speciality not found", { code: "NOT_FOUND" });
+    }
+    return ok(res, "Speciality fetched", { speciality });
+  } catch (err) {
+    console.error("Get speciality by slug error:", err);
+    return error(res, 500, "Internal server error", { details: err.message });
+  }
+};
+
 const createSpeciality = async (req, res) => {
   try {
-    const { title, sub_description, category, description } = req.body;
+    const { title, sub_description, category, description, services_intro, services_heading } = req.body;
     const topBanner = req.files?.top_banner?.[0];
     const mainBanners = req.files?.main_banners || [];
     const brochure = req.files?.brochure?.[0];
+    const services = normalizeServices(parseServices(req.body.services));
 
     if (!title || !sub_description || !category || !description) {
       return error(res, 400, "All speciality fields are required", {
@@ -102,6 +147,9 @@ const createSpeciality = async (req, res) => {
       brochure_url: brochure.location,
       brochure_key: brochure.key,
       brochure_type: resolveBrochureType(brochure),
+      services_intro: services_intro?.trim() || null,
+      services_heading: services_heading?.trim() || null,
+      services,
       created_by: req.user ? req.user.id : null,
       main_banners: mainBanners.map((file) => ({
         image_url: file.location,
@@ -119,10 +167,11 @@ const createSpeciality = async (req, res) => {
 const updateSpeciality = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, sub_description, category, description } = req.body;
+    const { title, sub_description, category, description, services_intro, services_heading } = req.body;
     const topBanner = req.files?.top_banner?.[0];
     const mainBanners = req.files?.main_banners || [];
     const brochure = req.files?.brochure?.[0];
+    const parsedServices = req.body.services !== undefined ? normalizeServices(parseServices(req.body.services)) : null;
 
     const existing = await specialityDao.getSpecialityById(id);
     if (!existing) {
@@ -147,6 +196,15 @@ const updateSpeciality = async (req, res) => {
         });
       }
       updateData.description = description;
+    }
+    if (services_intro !== undefined) {
+      updateData.services_intro = services_intro?.trim() || null;
+    }
+    if (services_heading !== undefined) {
+      updateData.services_heading = services_heading?.trim() || null;
+    }
+    if (parsedServices !== null) {
+      updateData.services = parsedServices;
     }
 
     if (topBanner) {
@@ -243,6 +301,7 @@ const deleteSpeciality = async (req, res) => {
 module.exports = {
   getAllSpecialities,
   getSpecialityById,
+  getSpecialityBySlug,
   createSpeciality,
   updateSpeciality,
   deleteSpeciality,
