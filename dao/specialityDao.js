@@ -32,12 +32,22 @@ const getAllSpecialities = async (filters = {}) => {
   const params = [];
   let query = `SELECT * FROM ${SPECIALITY_TABLE}`;
 
+  const conditions = [];
+
   if (filters.category) {
-    query += ` WHERE category = ?`;
+    conditions.push(`category = ?`);
     params.push(filters.category);
   }
 
-  query += ` ORDER BY created_at DESC`;
+  if (filters.showOnHome === true) {
+    conditions.push(`show_on_home = 1`);
+  }
+
+  if (conditions.length > 0) {
+    query += ` WHERE ` + conditions.join(` AND `);
+  }
+
+  query += ` ORDER BY display_order ASC, created_at ASC`;
 
   const [specialities] = await pool.query(query, params);
 
@@ -105,13 +115,15 @@ const createSpeciality = async (specialityData) => {
       services = [],
       created_by,
       main_banners,
+      show_on_home = true,
+      display_order = 0,
     } = specialityData;
     const slug = await generateUniqueSlug(connection, SPECIALITY_TABLE, title);
 
     await connection.query(
       `INSERT INTO ${SPECIALITY_TABLE}
-        (id, slug, title, top_banner_url, top_banner_key, sub_description, category, description, brochure_url, brochure_key, brochure_type, services_intro, services_heading, created_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (id, slug, title, top_banner_url, top_banner_key, sub_description, category, show_on_home, display_order, description, brochure_url, brochure_key, brochure_type, services_intro, services_heading, created_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         slug,
@@ -120,6 +132,8 @@ const createSpeciality = async (specialityData) => {
         top_banner_key,
         sub_description,
         category,
+        show_on_home,
+        display_order,
         description,
         brochure_url,
         brochure_key,

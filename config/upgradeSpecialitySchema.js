@@ -80,6 +80,9 @@ const upgradeSpecialitySchema = async () => {
     await ensureColumn(connection, "services_intro", "TEXT NULL AFTER brochure_type");
     await ensureColumn(connection, "services_heading", "VARCHAR(500) NULL AFTER services_intro");
 
+    await ensureColumn(connection, "show_on_home", "BOOLEAN NOT NULL DEFAULT TRUE AFTER category");
+    await ensureColumn(connection, "display_order", "INT NOT NULL DEFAULT 0 AFTER show_on_home");
+
     await ensureServicesTable(connection);
 
     console.log("\nSpeciality schema upgrade completed successfully.");

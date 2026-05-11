@@ -102,6 +102,8 @@ const getSpecialityBySlug = async (req, res) => {
 const createSpeciality = async (req, res) => {
   try {
     const { title, sub_description, category, description, services_intro, services_heading } = req.body;
+    const show_on_home = req.body.show_on_home !== 'false' && req.body.show_on_home !== false;
+    const display_order = parseInt(req.body.display_order, 10) || 0;
     const topBanner = req.files?.top_banner?.[0];
     const mainBanners = req.files?.main_banners || [];
     const brochure = req.files?.brochure?.[0];
@@ -143,6 +145,8 @@ const createSpeciality = async (req, res) => {
       top_banner_key: topBanner.key,
       sub_description: sub_description.trim(),
       category,
+      show_on_home,
+      display_order,
       description,
       brochure_url: brochure.location,
       brochure_key: brochure.key,
@@ -168,6 +172,12 @@ const updateSpeciality = async (req, res) => {
   try {
     const { id } = req.params;
     const { title, sub_description, category, description, services_intro, services_heading } = req.body;
+    const show_on_home = req.body.show_on_home !== undefined
+      ? (req.body.show_on_home !== 'false' && req.body.show_on_home !== false)
+      : undefined;
+    const display_order = req.body.display_order !== undefined
+      ? (parseInt(req.body.display_order, 10) || 0)
+      : undefined;
     const topBanner = req.files?.top_banner?.[0];
     const mainBanners = req.files?.main_banners || [];
     const brochure = req.files?.brochure?.[0];
@@ -202,6 +212,12 @@ const updateSpeciality = async (req, res) => {
     }
     if (services_heading !== undefined) {
       updateData.services_heading = services_heading?.trim() || null;
+    }
+    if (show_on_home !== undefined) {
+      updateData.show_on_home = show_on_home;
+    }
+    if (display_order !== undefined) {
+      updateData.display_order = display_order;
     }
     if (parsedServices !== null) {
       updateData.services = parsedServices;
