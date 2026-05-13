@@ -35,6 +35,7 @@ const nursingPhotoGalleryRoutes = require("./routes/nursingPhotoGalleryRoutes");
 const specialityRoutes = require("./routes/specialityRoutes");
 const doctorRoutes = require("./routes/doctorRoutes");
 const sympotmRoutes = require("./routes/sympotmRoutes");
+const governmentSchemeRoutes = require("./routes/governmentSchemeRoutes");
 
 const activityLogger = require("./middleware/activityLogger");
 
@@ -94,6 +95,7 @@ app.use("/api/specialities", specialityRoutes);
 app.use("/api/doctors", doctorRoutes);
 app.use("/api/sympotms", sympotmRoutes);
 app.use("/api/symptoms", sympotmRoutes);
+app.use("/api/government-schemes", governmentSchemeRoutes);
 
 app.get("/", (req, res) => {
   res.send("GCS Hospital API is running");

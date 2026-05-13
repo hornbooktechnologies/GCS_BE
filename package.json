@@ -37,7 +37,9 @@
     "seed-downloads-data": "node config/seedDownloadsData.js",
     "seed-doctor-directory": "node config/seedDoctorDirectoryData.js",
     "add-sympotms-table": "node config/addSympotmsTable.js",
-    "add-roles-permissions-tables": "node config/addRolesPermissionsTables.js"
+    "add-roles-permissions-tables": "node config/addRolesPermissionsTables.js",
+    "add-government-schemes-table": "node config/addGovernmentSchemesTable.js",
+    "seed-government-schemes": "node config/seedGovernmentSchemesData.js"
   },
   "keywords": [],
   "author": "",

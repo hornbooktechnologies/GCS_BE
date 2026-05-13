@@ -23,6 +23,7 @@ const MODULES = [
   { key: "campus-life", label: "Campus Life" },
   { key: "student-testimonials", label: "Student Testimonials" },
   { key: "facilities", label: "Facilities" },
+  { key: "government-schemes", label: "Government Schemes" },
   { key: "journals", label: "Journals" },
   { key: "nursing-photo-gallery", label: "Nursing Photo Gallery" },
   { key: "specialities", label: "Specialities" },

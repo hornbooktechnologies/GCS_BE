@@ -25,6 +25,7 @@ const DEFAULT_MODULES = [
   "campus-life",
   "student-testimonials",
   "facilities",
+  "government-schemes",
   "journals",
   "nursing-photo-gallery",
   "specialities",
