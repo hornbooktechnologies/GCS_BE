@@ -2,6 +2,8 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const os = require("os");
+const multer = require("multer");
+const path = require("path");
 
 const authRoutes = require("./routes/authRoutes");
 const roleRoutes = require("./routes/roleRoutes");
@@ -60,6 +62,7 @@ app.use(
   })
 );
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(activityLogger);
 
 app.use("/api/auth", authRoutes);

@@ -7,15 +7,20 @@ const createSpecialitiesTables = async () => {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS gcs_specialities (
         id VARCHAR(36) PRIMARY KEY,
+        slug VARCHAR(255) NOT NULL UNIQUE,
         title VARCHAR(255) NOT NULL,
         top_banner_url VARCHAR(500) NOT NULL,
         top_banner_key VARCHAR(500) NOT NULL,
         sub_description TEXT NOT NULL,
         category ENUM('general', 'super') NOT NULL,
+        show_on_home BOOLEAN NOT NULL DEFAULT TRUE,
+        display_order INT NOT NULL DEFAULT 0,
         description LONGTEXT NOT NULL,
         brochure_url VARCHAR(500) NOT NULL,
         brochure_key VARCHAR(500) NOT NULL,
         brochure_type ENUM('image', 'pdf') NOT NULL,
+        services_intro TEXT DEFAULT NULL,
+        services_heading VARCHAR(500) DEFAULT NULL,
         created_by VARCHAR(36) DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -35,8 +40,20 @@ const createSpecialitiesTables = async () => {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS gcs_speciality_services (
+        id VARCHAR(36) PRIMARY KEY,
+        speciality_id VARCHAR(36) NOT NULL,
+        title VARCHAR(500) NOT NULL,
+        display_order INT NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (speciality_id) REFERENCES gcs_specialities(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
     console.log("gcs_specialities table created or already exists");
     console.log("gcs_speciality_main_banners table created or already exists");
+    console.log("gcs_speciality_services table created or already exists");
     console.log("\nSpecialities tables are ready.");
     process.exit(0);
   } catch (error) {

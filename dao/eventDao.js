@@ -17,20 +17,83 @@ const getGalleryImagesByEventId = async (eventId) => {
   return rows;
 };
 
-const getAllEvents = async () => {
+const buildEventFilters = ({ search, year, place } = {}) => {
+  const conditions = [];
+  const values = [];
+
+  if (search && search.trim()) {
+    conditions.push("(title LIKE ? OR description LIKE ? OR place LIKE ?)");
+    const searchValue = `%${search.trim()}%`;
+    values.push(searchValue, searchValue, searchValue);
+  }
+
+  if (year && String(year).trim()) {
+    conditions.push("YEAR(event_date) = ?");
+    values.push(String(year).trim());
+  }
+
+  if (place && place.trim()) {
+    conditions.push("place LIKE ?");
+    values.push(`%${place.trim()}%`);
+  }
+
+  return {
+    whereClause: conditions.length ? `WHERE ${conditions.join(" AND ")}` : "",
+    values,
+  };
+};
+
+const getAllEvents = async ({ page = 1, limit = 12, all = false, search, year, place } = {}) => {
+  const offset = (page - 1) * limit;
+  const { whereClause, values } = buildEventFilters({ search, year, place });
+  const [[countRow]] = await pool.query(
+    `SELECT COUNT(*) AS total FROM ${EVENT_TABLE} ${whereClause}`,
+    values,
+  );
+  const total = Number(countRow?.total || 0);
+  const queryValues = all ? values : [...values, limit, offset];
   const [events] = await pool.query(
-    `SELECT * FROM ${EVENT_TABLE} ORDER BY event_date DESC, created_at DESC`,
+    `SELECT * FROM ${EVENT_TABLE} ${whereClause}
+     ORDER BY event_date DESC, created_at DESC${all ? "" : " LIMIT ? OFFSET ?"}`,
+    queryValues,
   );
 
   if (events.length === 0) {
-    return [];
+    return {
+      items: [],
+      pagination: {
+        total,
+        page,
+        limit: all ? total : limit,
+        pages: 1,
+        has_next_page: false,
+        has_prev_page: page > 1,
+      },
+    };
   }
 
+  const eventIds = events.map((event) => event.id);
+  const placeholders = eventIds.map(() => "?").join(", ");
   const [galleryRows] = await pool.query(
-    `SELECT * FROM ${GALLERY_TABLE} ORDER BY display_order ASC, created_at ASC`,
+    `SELECT * FROM ${GALLERY_TABLE}
+     WHERE event_id IN (${placeholders})
+     ORDER BY display_order ASC, created_at ASC`,
+    eventIds,
   );
 
-  return events.map((event) => mapEventWithGallery(event, galleryRows));
+  const pages = all ? 1 : Math.max(1, Math.ceil(total / limit));
+
+  return {
+    items: events.map((event) => mapEventWithGallery(event, galleryRows)),
+    pagination: {
+      total,
+      page,
+      limit: all ? total : limit,
+      pages,
+      has_next_page: !all && page < pages,
+      has_prev_page: !all && page > 1,
+    },
+  };
 };
 
 const getEventById = async (id) => {

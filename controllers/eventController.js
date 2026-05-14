@@ -26,8 +26,26 @@ const deleteS3Object = async (key) => {
 
 const getAllEvents = async (req, res) => {
   try {
-    const events = await eventDao.getAllEvents();
-    return ok(res, "Events fetched successfully", { events });
+    const parsedPage = Number.parseInt(req.query.page, 10);
+    const parsedLimit = Number.parseInt(req.query.limit, 10);
+    const page = Number.isInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+    const limit =
+      Number.isInteger(parsedLimit) && parsedLimit > 0
+        ? Math.min(parsedLimit, 100)
+        : 12;
+
+    const result = await eventDao.getAllEvents({
+      page,
+      limit,
+      all: req.query.all === "true",
+      search: req.query.search,
+      year: req.query.year,
+      place: req.query.place,
+    });
+    return ok(res, "Events fetched successfully", {
+      events: result.items,
+      pagination: result.pagination,
+    });
   } catch (err) {
     console.error("Get events error:", err);
     return error(res, 500, "Internal server error", { details: err.message });

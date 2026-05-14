@@ -16,9 +16,47 @@ const createCampusLife = async (data) => {
   return { id, title, image_url, image_key, created_by: created_by || null };
 };
 
-const getAllCampusLife = async () => {
-  const [rows] = await pool.query(`SELECT * FROM ${TABLE_NAME} ORDER BY created_at DESC`);
-  return rows;
+const buildCampusLifeFilters = ({ search } = {}) => {
+  const conditions = [];
+  const values = [];
+
+  if (search && search.trim()) {
+    conditions.push("title LIKE ?");
+    values.push(`%${search.trim()}%`);
+  }
+
+  return {
+    whereClause: conditions.length ? `WHERE ${conditions.join(" AND ")}` : "",
+    values,
+  };
+};
+
+const getAllCampusLife = async ({ page = 1, limit = 12, search } = {}) => {
+  const offset = (page - 1) * limit;
+  const { whereClause, values } = buildCampusLifeFilters({ search });
+  const [[countRow]] = await pool.query(
+    `SELECT COUNT(*) AS total FROM ${TABLE_NAME} ${whereClause}`,
+    values,
+  );
+  const [rows] = await pool.query(
+    `SELECT * FROM ${TABLE_NAME} ${whereClause} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+    [...values, limit, offset],
+  );
+
+  const total = Number(countRow?.total || 0);
+  const pages = Math.max(1, Math.ceil(total / limit));
+
+  return {
+    items: rows,
+    pagination: {
+      total,
+      page,
+      limit,
+      pages,
+      has_next_page: page < pages,
+      has_prev_page: page > 1,
+    },
+  };
 };
 
 const getCampusLifeById = async (id) => {

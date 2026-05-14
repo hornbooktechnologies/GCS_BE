@@ -1,4 +1,5 @@
 const { S3Client } = require("@aws-sdk/client-s3");
+const { randomUUID } = require("crypto");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
 const path = require("path");
@@ -12,6 +13,8 @@ const s3 = new S3Client({
   },
 });
 
+const NEWSLETTER_UPLOAD_LIMIT_MB = Number(process.env.NEWSLETTER_UPLOAD_LIMIT_MB || 250);
+
 const newsletterUpload = multer({
   storage: multerS3({
     s3,
@@ -21,11 +24,12 @@ const newsletterUpload = multer({
       cb(null, { fieldName: file.fieldname });
     },
     key: (req, file, cb) => {
-      const fileName = `${Date.now().toString()}-${file.originalname}`;
+      const extension = path.extname(file.originalname).toLowerCase();
+      const fileName = `${Date.now().toString()}-${randomUUID()}${extension}`;
       cb(null, `newsletters/${fileName}`);
     },
   }),
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: { fileSize: NEWSLETTER_UPLOAD_LIMIT_MB * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const extension = path.extname(file.originalname).toLowerCase();
 
@@ -75,5 +79,7 @@ const newsletterUpload = multer({
     cb(new Error("Unsupported upload field."));
   },
 });
+
+newsletterUpload.limitMb = NEWSLETTER_UPLOAD_LIMIT_MB;
 
 module.exports = newsletterUpload;

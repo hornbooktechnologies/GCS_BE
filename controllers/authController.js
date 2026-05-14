@@ -103,9 +103,10 @@ const refreshAccessToken = (req, res) => {
     }
 
     const accessToken = generateAccessToken(userData);
+    const newRefreshToken = generateRefreshToken(userData);
 
     return ok(res, "Access token refreshed successfully", {
-      tokens: { accessToken }
+      tokens: { accessToken, refreshToken: newRefreshToken }
     });
   });
 };

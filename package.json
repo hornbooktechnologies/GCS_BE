@@ -19,6 +19,7 @@
     "add-advertisement-banner-table": "node config/addAdvertisementBannerTable.js",
     "add-events-tables": "node config/addEventsTables.js",
     "add-newsletters-table": "node config/addNewslettersTable.js",
+    "upgrade-newsletter-schema": "node config/upgradeNewsletterSchema.js",
     "add-career-tables": "node config/addCareerTables.js",
     "add-employees-table": "node config/addEmployeesTable.js",
     "add-downloads-table": "node config/addDownloadsTable.js",

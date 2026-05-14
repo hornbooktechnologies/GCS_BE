@@ -48,8 +48,23 @@ const createCampusLife = async (req, res) => {
 
 const getAllCampusLife = async (req, res) => {
   try {
-    const campusLifeItems = await campusLifeDao.getAllCampusLife();
-    return ok(res, "Campus life items fetched successfully", { campusLifeItems });
+    const parsedPage = Number.parseInt(req.query.page, 10);
+    const parsedLimit = Number.parseInt(req.query.limit, 10);
+    const page = Number.isInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+    const limit =
+      Number.isInteger(parsedLimit) && parsedLimit > 0
+        ? Math.min(parsedLimit, 100)
+        : 12;
+
+    const result = await campusLifeDao.getAllCampusLife({
+      page,
+      limit,
+      search: req.query.search,
+    });
+    return ok(res, "Campus life items fetched successfully", {
+      campusLifeItems: result.items,
+      pagination: result.pagination,
+    });
   } catch (err) {
     console.error("Get campus life error:", err);
     return error(res, 500, "Internal server error", { details: err.message });

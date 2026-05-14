@@ -12,8 +12,10 @@ const s3 = new S3Client({
   },
 });
 
+const DEFAULT_DOCTOR_IMAGE = "/images/default-pic.jpg";
+
 const deleteS3Object = async (key) => {
-  if (!key) return;
+  if (!key || key.startsWith("/")) return;
   await s3.send(
     new DeleteObjectCommand({
       Bucket: process.env.AWS_BUCKET_NAME,
@@ -191,6 +193,7 @@ const updateDoctor = async (req, res) => {
     const { name, experience, designation, description } = req.body;
     const specialityIds = req.body.speciality_ids !== undefined ? normalizeSpecialityIds(req.body.speciality_ids) : null;
     const image = req.file;
+    const removeImage = parseBoolean(req.body.remove_image, false);
     const existing = await doctorDao.getDoctorById(req.params.id);
 
     if (!existing) {
@@ -240,6 +243,9 @@ const updateDoctor = async (req, res) => {
     if (image) {
       updateData.image_url = image.location;
       updateData.image_key = image.key;
+    } else if (removeImage) {
+      updateData.image_url = DEFAULT_DOCTOR_IMAGE;
+      updateData.image_key = DEFAULT_DOCTOR_IMAGE;
     }
 
     if (Object.keys(updateData).length === 0) {
@@ -248,7 +254,7 @@ const updateDoctor = async (req, res) => {
 
     await doctorDao.updateDoctor(req.params.id, updateData);
 
-    if (image && existing.image_key) {
+    if ((image || removeImage) && existing.image_key && existing.image_key !== DEFAULT_DOCTOR_IMAGE) {
       try {
         await deleteS3Object(existing.image_key);
       } catch (s3Err) {

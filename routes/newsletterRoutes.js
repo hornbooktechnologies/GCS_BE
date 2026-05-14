@@ -1,17 +1,40 @@
 const express = require("express");
+const multer = require("multer");
 const router = express.Router();
 const newsletterController = require("../controllers/newsletterController");
 const { verifyToken, verifyPermission } = require("../middleware/authMiddleware");
 const newsletterUpload = require("../middleware/newsletterUploadMiddleware");
 
+const handleNewsletterUpload = (req, res, next) => {
+  newsletterUpload.fields([
+    { name: "photo", maxCount: 1 },
+    { name: "attachment", maxCount: 1 },
+  ])(req, res, (err) => {
+    if (!err) {
+      return next();
+    }
+
+    if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({
+        success: false,
+        message: `Newsletter files must be ${newsletterUpload.limitMb}MB or smaller.`,
+        error: { code: "FILE_TOO_LARGE" },
+      });
+    }
+
+    return res.status(400).json({
+      success: false,
+      message: err.message || "Unable to upload newsletter files.",
+      error: { code: "UPLOAD_ERROR" },
+    });
+  });
+};
+
 router.post(
   "/",
   verifyToken,
   verifyPermission("newsletters", "create"),
-  newsletterUpload.fields([
-    { name: "photo", maxCount: 1 },
-    { name: "attachment", maxCount: 1 },
-  ]),
+  handleNewsletterUpload,
   newsletterController.createNewsletter,
 );
 
@@ -22,10 +45,7 @@ router.put(
   "/:id",
   verifyToken,
   verifyPermission("newsletters", "edit"),
-  newsletterUpload.fields([
-    { name: "photo", maxCount: 1 },
-    { name: "attachment", maxCount: 1 },
-  ]),
+  handleNewsletterUpload,
   newsletterController.updateNewsletter,
 );
 
