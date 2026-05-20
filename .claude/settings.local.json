@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(Get-ChildItem -Path \"d:\\\\GCSMC\" -Filter \"IMPLEMENTATION_PLAN*\" -Recurse)",
-      "WebFetch(domain:www.gcsmc.org)"
+      "WebFetch(domain:www.gcsmc.org)",
+      "Bash(node -e ' *)"
     ]
   }
 }
