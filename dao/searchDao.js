@@ -184,7 +184,7 @@ async function searchFacilities(term, limit) {
 async function searchTeam(term, limit) {
   const like = `%${term}%`;
   const [rows] = await pool.query(
-    `SELECT id, name, subtitle, short_description
+    `SELECT id, slug, name, subtitle, short_description
      FROM gcs_team_members
      WHERE name LIKE ? OR subtitle LIKE ? OR short_description LIKE ?
      LIMIT ?`,
@@ -194,7 +194,7 @@ async function searchTeam(term, limit) {
     type: 'team',
     title: r.name,
     snippet: extractSnippet(r.short_description || r.subtitle, term),
-    url: `/meet-the-team/${r.id}`,
+    url: `/meet-the-team/${r.slug || r.id}`,
     relevance_score: scoreResult(r.name, r.subtitle, r.short_description, term),
   }));
 }

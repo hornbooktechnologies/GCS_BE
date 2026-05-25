@@ -115,6 +115,19 @@ const getTeamMemberById = async (req, res) => {
   }
 };
 
+const getTeamMemberBySlug = async (req, res) => {
+  try {
+    const member = await teamDao.getTeamMemberBySlug(req.params.slug);
+    if (!member) {
+      return error(res, 404, "Team member not found");
+    }
+    return ok(res, "Team member fetched successfully", member);
+  } catch (err) {
+    console.error("Get team member by slug error:", err);
+    return error(res, 500, "Internal server error", { details: err.message });
+  }
+};
+
 const updateTeamMember = async (req, res) => {
   try {
     const {
@@ -241,6 +254,7 @@ module.exports = {
   createTeamMember,
   getAllTeamMembers,
   getTeamMemberById,
+  getTeamMemberBySlug,
   updateTeamMember,
   deleteTeamMember,
 };

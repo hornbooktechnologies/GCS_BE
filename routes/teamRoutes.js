@@ -5,6 +5,7 @@ const { verifyToken, verifyPermission } = require("../middleware/authMiddleware"
 const teamUpload = require("../middleware/teamUploadMiddleware");
 
 router.get("/", teamController.getAllTeamMembers);
+router.get("/slug/:slug", teamController.getTeamMemberBySlug);
 router.get("/:id", teamController.getTeamMemberById);
 router.post("/", verifyToken, verifyPermission("team", "create"), teamUpload.single("image"), teamController.createTeamMember);
 router.put("/:id", verifyToken, verifyPermission("team", "edit"), teamUpload.single("image"), teamController.updateTeamMember);

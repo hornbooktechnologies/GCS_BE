@@ -127,6 +127,43 @@ const createTeamTables = async () => {
       "featured_description",
       "LONGTEXT DEFAULT NULL AFTER featured_title",
     );
+    await ensureColumn(
+      "gcs_team_members",
+      "slug",
+      "VARCHAR(255) DEFAULT NULL AFTER id",
+    );
+
+    // Add unique index on slug if it doesn't exist
+    const [idxRows] = await pool.query(`
+      SELECT 1
+      FROM INFORMATION_SCHEMA.STATISTICS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'gcs_team_members'
+        AND INDEX_NAME = 'uq_team_members_slug'
+      LIMIT 1
+    `);
+    if (idxRows.length === 0) {
+      await pool.query(`ALTER TABLE gcs_team_members ADD UNIQUE INDEX uq_team_members_slug (slug)`);
+      console.log("Added unique index on gcs_team_members.slug");
+    }
+
+    // Backfill slugs for existing rows that have none
+    const { generateUniqueSlug } = require("../utils/slug");
+    const [membersWithoutSlug] = await pool.query(
+      `SELECT id, name FROM gcs_team_members WHERE slug IS NULL OR slug = ''`
+    );
+    if (membersWithoutSlug.length > 0) {
+      const connection = await pool.getConnection();
+      try {
+        for (const row of membersWithoutSlug) {
+          const slug = await generateUniqueSlug(connection, "gcs_team_members", row.name);
+          await connection.query(`UPDATE gcs_team_members SET slug = ? WHERE id = ?`, [slug, row.id]);
+        }
+      } finally {
+        connection.release();
+      }
+      console.log(`Backfilled slugs for ${membersWithoutSlug.length} team members`);
+    }
 
     console.log("gcs_team_categories and gcs_team_members tables created or already exist");
     console.log("\nTeam tables are ready.");
