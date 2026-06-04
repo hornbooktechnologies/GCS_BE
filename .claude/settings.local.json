@@ -3,7 +3,8 @@
     "allow": [
       "Bash(Get-ChildItem -Path \"d:\\\\GCSMC\" -Filter \"IMPLEMENTATION_PLAN*\" -Recurse)",
       "WebFetch(domain:www.gcsmc.org)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "WebFetch(domain:www.svgator.com)"
     ]
   }
 }

@@ -347,7 +347,17 @@ const STATIC_PAGES = [
     url: '/gcsmc-journal-of-medical-sciences',
   },
 
-  // ─── Hospital Committees & Governance ─────────────────────────────────────
+  // ─── Committees & Governance ──────────────────────────────────────────────
+  {
+    title: 'All Committees — GCS Medical College & Hospital',
+    keywords: [
+      'committees', 'all committees', 'committee directory', 'governance',
+      'hospital committee', 'research committee', 'medical college committee',
+      'nursing committee', 'clinical governance', 'committee members',
+    ],
+    snippet: 'Unified directory of all governance, quality, safety, research, and ethics committees across GCS Hospital, Medical College, Research, and Nursing departments.',
+    url: '/committees',
+  },
   {
     title: 'Hospital Committees',
     keywords: [
@@ -357,6 +367,28 @@ const STATIC_PAGES = [
     ],
     snippet: 'Directory of hospital governance committees including members and designations across clinical, quality, safety and patient support functions at GCS Hospital.',
     url: '/hospital-committee',
+  },
+  {
+    title: 'Medical College Committees — GCS Medical College',
+    keywords: [
+      'medical college committee', 'anti ragging committee', 'anti ragging squad',
+      'college council', 'gender harassment committee', 'institutional ethics committee',
+      'medical education unit', 'curriculum committee', 'pharmacovigilance committee',
+      'animal ethical committee', 'scientific research committee', 'medical college governance',
+    ],
+    snippet: 'All governance and welfare committees of GCS Medical College including Anti-Ragging, Ethics, Curriculum, Pharmacovigilance, and Scientific Research committees.',
+    url: '/medical-college-committee',
+  },
+  {
+    title: 'Nursing Committees — GCS School of Nursing',
+    keywords: [
+      'nursing committee', 'nursing school committee', 'nursing college committee',
+      'admission committee', 'disciplinary committee', 'curriculum committee nursing',
+      'sna committee', 'women empowerment cell', 'student counseling committee',
+      'health welfare committee', 'sport committee nursing',
+    ],
+    snippet: 'All committees of GCS School of Nursing covering admissions, curriculum, anti-ragging, student welfare, health, sports, and women empowerment.',
+    url: '/nursing-committees',
   },
 
   // ─── Patient Experience ────────────────────────────────────────────────────

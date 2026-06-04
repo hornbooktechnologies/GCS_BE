@@ -39,6 +39,7 @@ const specialityRoutes = require("./routes/specialityRoutes");
 const doctorRoutes = require("./routes/doctorRoutes");
 const sympotmRoutes = require("./routes/sympotmRoutes");
 const governmentSchemeRoutes = require("./routes/governmentSchemeRoutes");
+const committeeRoutes = require("./routes/committeeRoutes");
 const searchRoutes = require("./routes/searchRoutes");
 
 const activityLogger = require("./middleware/activityLogger");
@@ -105,6 +106,7 @@ app.use("/api/doctors", doctorRoutes);
 app.use("/api/sympotms", sympotmRoutes);
 app.use("/api/symptoms", sympotmRoutes);
 app.use("/api/government-schemes", governmentSchemeRoutes);
+app.use("/api/committees", committeeRoutes);
 app.use("/api/search", searchRoutes);
 
 app.get("/", (req, res) => {
