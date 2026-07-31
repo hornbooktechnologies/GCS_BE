@@ -95,7 +95,7 @@ const getAllDoctors = async (filters = {}) => {
     `SELECT DISTINCT d.*
      ${fromClause}
      ${whereClause}
-     ORDER BY d.is_hod DESC, d.display_order ASC, d.name ASC
+     ORDER BY d.display_order ASC, d.is_hod DESC, d.name ASC
      LIMIT ? OFFSET ?`,
     [...params, limit, offset],
   );
@@ -145,11 +145,19 @@ const createDoctor = async (data) => {
       designation,
       description,
       speciality_ids,
-      display_order = 0,
+      display_order,
       is_hod = 0,
       created_by,
     } = data;
     const slug = await generateUniqueSlug(connection, DOCTOR_TABLE, name);
+    let resolvedDisplayOrder = display_order;
+
+    if (!Number.isInteger(resolvedDisplayOrder) || resolvedDisplayOrder < 0) {
+      const [orderRows] = await connection.query(
+        `SELECT COALESCE(MAX(display_order), 0) + 1 AS next_order FROM ${DOCTOR_TABLE}`,
+      );
+      resolvedDisplayOrder = orderRows[0]?.next_order || 1;
+    }
 
     await connection.query(
       `INSERT INTO ${DOCTOR_TABLE}
@@ -164,7 +172,7 @@ const createDoctor = async (data) => {
         experience,
         designation,
         description,
-        display_order,
+        resolvedDisplayOrder,
         is_hod ? 1 : 0,
         created_by || null,
       ],
@@ -251,6 +259,27 @@ const deleteDoctor = async (id) => {
   return null;
 };
 
+const updateDoctorOrder = async (orderedItems) => {
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+    for (const item of orderedItems) {
+      await connection.query(
+        `UPDATE ${DOCTOR_TABLE} SET display_order = ? WHERE id = ?`,
+        [item.display_order, item.id],
+      );
+    }
+    await connection.commit();
+    return true;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+};
+
 module.exports = {
   getAllDoctors,
   getDoctorById,
@@ -258,4 +287,5 @@ module.exports = {
   createDoctor,
   updateDoctor,
   deleteDoctor,
+  updateDoctorOrder,
 };

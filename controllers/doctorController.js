@@ -129,7 +129,7 @@ const createDoctor = async (req, res) => {
       designation: designation.trim(),
       description,
       speciality_ids: specialityIds,
-      display_order: displayOrder ?? 0,
+      display_order: displayOrder,
       is_hod: isHod,
       image_url: image.location,
       image_key: image.key,
@@ -139,6 +139,39 @@ const createDoctor = async (req, res) => {
     return created(res, "Doctor created successfully", doctor);
   } catch (err) {
     console.error("Create doctor error:", err);
+    return error(res, 500, "Internal server error", { details: err.message });
+  }
+};
+
+const reorderDoctors = async (req, res) => {
+  try {
+    const { orderedItems } = req.body;
+
+    if (!Array.isArray(orderedItems) || orderedItems.length === 0) {
+      return error(res, 400, "orderedItems array is required", {
+        code: "MISSING_FIELDS",
+      });
+    }
+
+    const seenIds = new Set();
+    const normalizedItems = [];
+
+    for (const item of orderedItems) {
+      const displayOrder = parseNonNegativeInt(item?.display_order);
+      if (!item?.id || displayOrder === null || seenIds.has(item.id)) {
+        return error(res, 400, "Each doctor must have a unique id and valid display_order", {
+          code: "INVALID_DATA",
+        });
+      }
+
+      seenIds.add(item.id);
+      normalizedItems.push({ id: item.id, display_order: displayOrder });
+    }
+
+    await doctorDao.updateDoctorOrder(normalizedItems);
+    return ok(res, "Doctor order updated successfully");
+  } catch (err) {
+    console.error("Reorder doctors error:", err);
     return error(res, 500, "Internal server error", { details: err.message });
   }
 };
@@ -294,6 +327,7 @@ module.exports = {
   getAllDoctors,
   getDoctorById,
   getDoctorBySlug,
+  reorderDoctors,
   updateDoctor,
   deleteDoctor,
 };

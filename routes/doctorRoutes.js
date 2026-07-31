@@ -7,6 +7,7 @@ const doctorUpload = require("../middleware/doctorUploadMiddleware");
 router.get("/", doctorController.getAllDoctors);
 router.get("/by-slug/:slug", doctorController.getDoctorBySlug);
 router.get("/:id", doctorController.getDoctorById);
+router.put("/reorder", verifyToken, verifyPermission("doctors", "edit"), doctorController.reorderDoctors);
 router.post("/", verifyToken, verifyPermission("doctors", "create"), doctorUpload.single("image"), doctorController.createDoctor);
 router.put("/:id", verifyToken, verifyPermission("doctors", "edit"), doctorUpload.single("image"), doctorController.updateDoctor);
 router.delete("/:id", verifyToken, verifyPermission("doctors", "delete"), doctorController.deleteDoctor);
