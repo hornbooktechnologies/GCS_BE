@@ -2,7 +2,11 @@ const express = require("express");
 const multer = require("multer");
 const router = express.Router();
 const newsletterController = require("../controllers/newsletterController");
-const { verifyToken, verifyPermission } = require("../middleware/authMiddleware");
+const {
+  verifyToken,
+  verifyPermission,
+  verifyAnyPermission,
+} = require("../middleware/authMiddleware");
 const newsletterUpload = require("../middleware/newsletterUploadMiddleware");
 
 const handleNewsletterUpload = (req, res, next) => {
@@ -29,6 +33,13 @@ const handleNewsletterUpload = (req, res, next) => {
     });
   });
 };
+
+router.post(
+  "/upload-policy",
+  verifyToken,
+  verifyAnyPermission("newsletters", ["create", "edit"]),
+  newsletterController.createNewsletterUploadPolicy,
+);
 
 router.post(
   "/",

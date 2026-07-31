@@ -13,7 +13,7 @@ const s3 = new S3Client({
   },
 });
 
-const NEWSLETTER_UPLOAD_LIMIT_MB = Number(process.env.NEWSLETTER_UPLOAD_LIMIT_MB || 250);
+const NEWSLETTER_UPLOAD_LIMIT_MB = Number(process.env.NEWSLETTER_UPLOAD_LIMIT_MB || 100);
 
 const newsletterUpload = multer({
   storage: multerS3({

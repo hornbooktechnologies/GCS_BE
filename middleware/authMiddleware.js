@@ -74,4 +74,37 @@ const verifyPermission = (moduleKey, action) => {
   };
 };
 
-module.exports = { verifyToken, verifyRole, verifyPermission };
+const verifyAnyPermission = (moduleKey, actions) => {
+  return async (req, res, next) => {
+    try {
+      if (!req.user) {
+        return error(res, 401, "Authentication required", {
+          code: "AUTH_REQUIRED",
+        });
+      }
+
+      for (const action of actions) {
+        if (await roleDao.userHasPermission(req.user.role, moduleKey, action)) {
+          return next();
+        }
+      }
+
+      return error(res, 403, "Access denied: Missing permission", {
+        code: "PERMISSION_DENIED",
+        module: moduleKey,
+        actions,
+      });
+    } catch (err) {
+      return error(res, 500, "Permission check failed", {
+        details: err.message,
+      });
+    }
+  };
+};
+
+module.exports = {
+  verifyToken,
+  verifyRole,
+  verifyPermission,
+  verifyAnyPermission,
+};
