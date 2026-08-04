@@ -28,7 +28,6 @@ const awardRoutes = require("./routes/awardRoutes");
 const newsRoutes = require("./routes/newsRoutes");
 const healthCampRoutes = require("./routes/healthCampRoutes");
 const checkupPlanRoutes = require("./routes/checkupPlanRoutes");
-const nodelOfficerRoutes = require("./routes/nodelOfficerRoutes");
 const resultRoutes = require("./routes/resultRoutes");
 const campusLifeRoutes = require("./routes/campusLifeRoutes");
 const studentTestimonialRoutes = require("./routes/studentTestimonialRoutes");
@@ -41,6 +40,7 @@ const sympotmRoutes = require("./routes/sympotmRoutes");
 const governmentSchemeRoutes = require("./routes/governmentSchemeRoutes");
 const committeeRoutes = require("./routes/committeeRoutes");
 const searchRoutes = require("./routes/searchRoutes");
+const journeyMilestoneRoutes = require("./routes/journeyMilestoneRoutes");
 
 const activityLogger = require("./middleware/activityLogger");
 
@@ -94,7 +94,6 @@ app.use("/api/awards", awardRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/api/health-camps", healthCampRoutes);
 app.use("/api/checkup-plans", checkupPlanRoutes);
-app.use("/api/nodel-officers", nodelOfficerRoutes);
 app.use("/api/results", resultRoutes);
 app.use("/api/campus-life", campusLifeRoutes);
 app.use("/api/student-testimonials", studentTestimonialRoutes);
@@ -108,6 +107,7 @@ app.use("/api/symptoms", sympotmRoutes);
 app.use("/api/government-schemes", governmentSchemeRoutes);
 app.use("/api/committees", committeeRoutes);
 app.use("/api/search", searchRoutes);
+app.use("/api/journey-milestones", journeyMilestoneRoutes);
 
 app.get("/", (req, res) => {
   res.send("GCS Hospital API is running");

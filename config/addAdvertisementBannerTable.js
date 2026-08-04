@@ -19,7 +19,7 @@ const createAdvertisementBannerTable = async () => {
     `);
 
     console.log("gcs_advertisement_banner table created or already exists");
-    console.log("\nAdvertisement banner table is ready.");
+    console.log("\nAdvertisement banner table is ready for two ordered banner slots.");
     process.exit(0);
   } catch (error) {
     console.error("Error creating advertisement banner table:", error.message);

@@ -242,7 +242,7 @@ const createTables = async () => {
         title VARCHAR(255) NOT NULL,
         image_url VARCHAR(500) NOT NULL,
         image_key VARCHAR(500) NOT NULL,
-        pdf_url VARCHAR(500) NOT NULL,
+        pdf_url VARCHAR(500) DEFAULT NULL,
         pdf_key VARCHAR(500) NOT NULL,
         created_by VARCHAR(36) DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -387,24 +387,6 @@ const createTables = async () => {
     console.log("gcs_checkup_plan_tests table created successfully");
 
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS gcs_nodel_officers (
-        id VARCHAR(36) PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        image_url VARCHAR(500) NOT NULL,
-        image_key VARCHAR(500) NOT NULL,
-        position VARCHAR(255) NOT NULL,
-        address TEXT NOT NULL,
-        phone_number VARCHAR(20) NOT NULL,
-        email VARCHAR(255) NOT NULL,
-        created_by VARCHAR(36) DEFAULT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (created_by) REFERENCES gcs_users(id) ON DELETE SET NULL
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    `);
-    console.log("gcs_nodel_officers table created successfully");
-
-    await pool.query(`
       CREATE TABLE IF NOT EXISTS gcs_results (
         id VARCHAR(36) PRIMARY KEY,
         title VARCHAR(255) NOT NULL,
@@ -469,6 +451,10 @@ const createTables = async () => {
         volume VARCHAR(100) NOT NULL,
         number VARCHAR(100) NOT NULL,
         duration VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) DEFAULT NULL,
+        issue_pdf_url VARCHAR(500) DEFAULT NULL,
+        issue_pdf_key VARCHAR(500) DEFAULT NULL,
+        display_order INT NOT NULL DEFAULT 0,
         created_by VARCHAR(36) DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -481,17 +467,47 @@ const createTables = async () => {
       CREATE TABLE IF NOT EXISTS gcs_journal_entries (
         id VARCHAR(36) PRIMARY KEY,
         journal_id VARCHAR(36) NOT NULL,
-        section ENUM('editorial', 'original_article', 'case_report') NOT NULL,
+        section ENUM('editorial', 'review_article', 'original_article', 'case_report') NOT NULL,
         title VARCHAR(255) NOT NULL,
         author VARCHAR(255) NOT NULL,
         pdf_url VARCHAR(500) NOT NULL,
-        pdf_key VARCHAR(500) NOT NULL,
+        pdf_key VARCHAR(500) DEFAULT NULL,
         display_order INT DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (journal_id) REFERENCES gcs_journals(id) ON DELETE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
     console.log("gcs_journal_entries table created successfully");
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS gcs_journey_milestones (
+        id VARCHAR(36) PRIMARY KEY,
+        year VARCHAR(20) NOT NULL,
+        icon_key VARCHAR(50) NOT NULL,
+        color_key VARCHAR(50) NOT NULL DEFAULT 'blue',
+        side ENUM('left', 'right') NOT NULL DEFAULT 'left',
+        display_order INT NOT NULL DEFAULT 0,
+        status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
+        created_by VARCHAR(36) DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (created_by) REFERENCES gcs_users(id) ON DELETE SET NULL
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+    console.log("gcs_journey_milestones table created successfully");
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS gcs_journey_milestone_events (
+        id VARCHAR(36) PRIMARY KEY,
+        milestone_id VARCHAR(36) NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        description TEXT NOT NULL,
+        display_order INT NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (milestone_id) REFERENCES gcs_journey_milestones(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+    console.log("gcs_journey_milestone_events table created successfully");
 
     await pool.query(`
       CREATE TABLE IF NOT EXISTS gcs_nursing_photo_gallery (

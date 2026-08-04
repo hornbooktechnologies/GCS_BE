@@ -40,7 +40,11 @@
     "add-sympotms-table": "node config/addSympotmsTable.js",
     "add-roles-permissions-tables": "node config/addRolesPermissionsTables.js",
     "add-government-schemes-table": "node config/addGovernmentSchemesTable.js",
-    "seed-government-schemes": "node config/seedGovernmentSchemesData.js"
+    "seed-government-schemes": "node config/seedGovernmentSchemesData.js",
+    "add-journals-table": "node config/addJournalsTable.js",
+    "seed-journals-data": "node config/seedJournalsData.js",
+    "add-journey-milestones-tables": "node config/addJourneyMilestonesTables.js",
+    "seed-journey-milestones": "node config/seedJourneyMilestonesData.js"
   },
   "keywords": [],
   "author": "",

@@ -13,6 +13,7 @@ const s3 = new S3Client({
 
 const SECTION_DEFS = [
   { key: "editorial", field: "editorial_pdfs" },
+  { key: "review_article", field: "review_article_pdfs" },
   { key: "original_article", field: "original_article_pdfs" },
   { key: "case_report", field: "case_report_pdfs" },
 ];
@@ -44,10 +45,6 @@ const buildEntriesFromRequest = (body, files) => {
     const titles = normalizeArray(body[`${sectionDef.key}_titles`]).filter(Boolean);
     const authors = normalizeArray(body[`${sectionDef.key}_authors`]).filter(Boolean);
     const pdfs = files?.[sectionDef.field] || [];
-
-    if (titles.length === 0 || authors.length === 0 || pdfs.length === 0) {
-      throw new Error(`At least one complete ${sectionDef.key.replace(/_/g, " ")} item is required`);
-    }
 
     if (titles.length !== authors.length || titles.length !== pdfs.length) {
       throw new Error(`Mismatched ${sectionDef.key.replace(/_/g, " ")} items`);
@@ -82,10 +79,6 @@ const parseUpdateEntries = (body, files, existing) => {
 
   for (const sectionDef of SECTION_DEFS) {
     const items = Array.isArray(payload[sectionDef.key]) ? payload[sectionDef.key] : [];
-    if (items.length === 0) {
-      throw new Error(`At least one ${sectionDef.key.replace(/_/g, " ")} item is required`);
-    }
-
     const newPdfs = incomingFiles[sectionDef.field] || [];
     let newPdfIndex = 0;
 
@@ -148,11 +141,21 @@ const createJournal = async (req, res) => {
       return error(res, 400, buildErr.message, { code: "INVALID_DATA" });
     }
 
+    const issuePdf = req.files?.issue_pdf?.[0] || null;
+    const entryCount = Object.values(entries).flat().length;
+    if (!issuePdf && entryCount === 0) {
+      return error(res, 400, "Add a full issue PDF or at least one journal entry", {
+        code: "MISSING_JOURNAL_CONTENT",
+      });
+    }
+
     const journal = await journalDao.createJournal({
       volume: volume.trim(),
       number: number.trim(),
       duration: duration.trim(),
       entries,
+      issue_pdf_url: issuePdf?.location || null,
+      issue_pdf_key: issuePdf?.key || null,
       created_by: req.user ? req.user.id : null,
     });
 
@@ -182,6 +185,19 @@ const getJournalById = async (req, res) => {
     return ok(res, "Journal fetched successfully", journal);
   } catch (err) {
     console.error("Get journal error:", err);
+    return error(res, 500, "Internal server error", { details: err.message });
+  }
+};
+
+const getJournalBySlug = async (req, res) => {
+  try {
+    const journal = await journalDao.getJournalBySlug(req.params.slug);
+    if (!journal) {
+      return error(res, 404, "Journal not found");
+    }
+    return ok(res, "Journal fetched successfully", journal);
+  } catch (err) {
+    console.error("Get journal by slug error:", err);
     return error(res, 500, "Internal server error", { details: err.message });
   }
 };
@@ -221,6 +237,25 @@ const updateJournal = async (req, res) => {
       }
     }
 
+    const uploadedIssuePdf = req.files?.issue_pdf?.[0] || null;
+    const removeIssuePdf = req.body.remove_issue_pdf === "true" && !uploadedIssuePdf;
+    if (uploadedIssuePdf) {
+      updateData.issue_pdf_url = uploadedIssuePdf.location;
+      updateData.issue_pdf_key = uploadedIssuePdf.key;
+    } else if (removeIssuePdf) {
+      updateData.issue_pdf_url = null;
+      updateData.issue_pdf_key = null;
+    }
+
+    const nextEntries = updateData.entries || existing.entries || {};
+    const nextEntryCount = Object.values(nextEntries).flat().length;
+    const hasIssuePdf = Boolean(uploadedIssuePdf || (!removeIssuePdf && existing.issue_pdf_url));
+    if (!hasIssuePdf && nextEntryCount === 0) {
+      return error(res, 400, "Add a full issue PDF or at least one journal entry", {
+        code: "MISSING_JOURNAL_CONTENT",
+      });
+    }
+
     if (Object.keys(updateData).length === 0) {
       return error(res, 400, "No fields to update", { code: "NO_UPDATE_DATA" });
     }
@@ -237,6 +272,15 @@ const updateJournal = async (req, res) => {
         } catch (s3Err) {
           console.error("Error deleting replaced journal PDF from S3:", s3Err);
         }
+      }
+    }
+
+
+    if ((uploadedIssuePdf || removeIssuePdf) && existing.issue_pdf_key) {
+      try {
+        await deleteS3Object(existing.issue_pdf_key);
+      } catch (s3Err) {
+        console.error("Error deleting replaced full issue PDF from S3:", s3Err);
       }
     }
 
@@ -273,6 +317,7 @@ module.exports = {
   createJournal,
   getAllJournals,
   getJournalById,
+  getJournalBySlug,
   updateJournal,
   deleteJournal,
 };

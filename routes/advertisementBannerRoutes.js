@@ -17,4 +17,19 @@ router.put(
   advertisementBannerController.upsertAdvertisementBanner,
 );
 
+router.put(
+  "/:id",
+  verifyToken,
+  verifyPermission("advertisement-banner", "edit"),
+  advertisementBannerUpload.single("image"),
+  advertisementBannerController.upsertAdvertisementBanner,
+);
+
+router.delete(
+  "/:id",
+  verifyToken,
+  verifyPermission("advertisement-banner", "delete"),
+  advertisementBannerController.deleteAdvertisementBanner,
+);
+
 module.exports = router;

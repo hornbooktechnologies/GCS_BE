@@ -1,9 +1,10 @@
 const { v4: uuidv4 } = require("uuid");
 const pool = require("../config/db");
+const { createJournalSlug } = require("../utils/journalUtils");
 
 const JOURNAL_TABLE = "gcs_journals";
 const ENTRY_TABLE = "gcs_journal_entries";
-const SECTION_ORDER = ["editorial", "original_article", "case_report"];
+const SECTION_ORDER = ["editorial", "review_article", "original_article", "case_report"];
 
 const groupEntries = (entries) =>
   SECTION_ORDER.reduce((acc, section) => {
@@ -22,7 +23,9 @@ const getEntriesByJournalId = async (journalId) => {
 };
 
 const getAllJournals = async () => {
-  const [journals] = await pool.query(`SELECT * FROM ${JOURNAL_TABLE} ORDER BY created_at DESC`);
+  const [journals] = await pool.query(
+    `SELECT * FROM ${JOURNAL_TABLE} ORDER BY display_order ASC, created_at DESC`,
+  );
   if (journals.length === 0) {
     return [];
   }
@@ -36,11 +39,25 @@ const getAllJournals = async () => {
       entries: groupEntries(journalEntries),
       entry_counts: {
         editorial: journalEntries.filter((item) => item.section === "editorial").length,
+        review_article: journalEntries.filter((item) => item.section === "review_article").length,
         original_article: journalEntries.filter((item) => item.section === "original_article").length,
         case_report: journalEntries.filter((item) => item.section === "case_report").length,
       },
     };
   });
+};
+
+const getJournalBySlug = async (slug) => {
+  const [rows] = await pool.query(`SELECT * FROM ${JOURNAL_TABLE} WHERE slug = ?`, [slug]);
+  if (rows.length === 0) {
+    return null;
+  }
+
+  const entries = await getEntriesByJournalId(rows[0].id);
+  return {
+    ...rows[0],
+    entries: groupEntries(entries),
+  };
 };
 
 const getJournalById = async (id) => {
@@ -63,10 +80,22 @@ const createJournal = async (data) => {
     await connection.beginTransaction();
 
     const id = uuidv4();
+    const slug = data.slug || createJournalSlug(data.volume, data.number, data.duration);
     await connection.query(
-      `INSERT INTO ${JOURNAL_TABLE} (id, volume, number, duration, created_by)
-       VALUES (?, ?, ?, ?, ?)`,
-      [id, data.volume, data.number, data.duration, data.created_by || null],
+      `INSERT INTO ${JOURNAL_TABLE}
+        (id, volume, number, duration, slug, issue_pdf_url, issue_pdf_key, display_order, created_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id,
+        data.volume,
+        data.number,
+        data.duration,
+        slug,
+        data.issue_pdf_url || null,
+        data.issue_pdf_key || null,
+        data.display_order || 0,
+        data.created_by || null,
+      ],
     );
 
     for (const section of SECTION_ORDER) {
@@ -145,13 +174,17 @@ const deleteJournal = async (id) => {
   }
 
   return {
-    pdfKeys: Object.values(existing.entries).flat().map((item) => item.pdf_key),
+    pdfKeys: [
+      existing.issue_pdf_key,
+      ...Object.values(existing.entries).flat().map((item) => item.pdf_key),
+    ].filter(Boolean),
   };
 };
 
 module.exports = {
   getAllJournals,
   getJournalById,
+  getJournalBySlug,
   createJournal,
   updateJournal,
   deleteJournal,
