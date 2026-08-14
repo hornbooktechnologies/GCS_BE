@@ -19,6 +19,7 @@ const DEFAULT_MODULES = [
   "awards",
   "news",
   "health-camps",
+  "bio-medical-waste",
   "checkup-plans",
   "results",
   "campus-life",

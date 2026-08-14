@@ -41,6 +41,7 @@ const governmentSchemeRoutes = require("./routes/governmentSchemeRoutes");
 const committeeRoutes = require("./routes/committeeRoutes");
 const searchRoutes = require("./routes/searchRoutes");
 const journeyMilestoneRoutes = require("./routes/journeyMilestoneRoutes");
+const bioMedicalWasteRoutes = require("./routes/bioMedicalWasteRoutes");
 
 const activityLogger = require("./middleware/activityLogger");
 
@@ -108,6 +109,7 @@ app.use("/api/government-schemes", governmentSchemeRoutes);
 app.use("/api/committees", committeeRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/journey-milestones", journeyMilestoneRoutes);
+app.use("/api/bio-medical-waste", bioMedicalWasteRoutes);
 
 app.get("/", (req, res) => {
   res.send("GCS Hospital API is running");
